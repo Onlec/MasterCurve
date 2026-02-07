@@ -174,6 +174,25 @@ if uploaded_file:
             ax1.legend(loc='lower right', fontsize=8, ncol=2)
             ax1.grid(True, which="both", alpha=0.2)
             st.pyplot(fig1)
+            # --- NIEUW: VAN GURP-PALMEN PLOT ---
+            st.subheader("Van Gurp-Palmen Plot (Data Validatie)")
+            fig3, ax3 = plt.subplots(figsize=(10, 6))
+            
+            for t, color in zip(selected_temps, colors):
+                data = df[df['T_group'] == t].copy()
+                # Bereken Complexe Modulus G* en Fasehoek delta
+                # G* = sqrt(Gp^2 + Gpp^2)
+                g_star = np.sqrt(data['Gp']**2 + data['Gpp']**2)
+                delta = np.degrees(np.arctan2(data['Gpp'], data['Gp']))
+                
+                ax3.semilogx(g_star, delta, 'o', color=color, label=f"{int(t)}°C", markersize=4, alpha=0.7)
+            
+            ax3.set_xlabel("|G*| (Pa)")
+            ax3.set_ylabel("Fasehoek δ (°)")
+            ax3.set_ylim(0, 90)
+            ax3.grid(True, which="both", alpha=0.2)
+            ax3.legend(loc='upper right', fontsize=8, ncol=2)
+            st.pyplot(fig3)
         
         with col2:
             st.subheader("Shift Factors")
