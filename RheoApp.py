@@ -12,6 +12,54 @@ st.title("🧪 TPU Rheology Master Curve Tool")
 
 # --- FUNCTIE VOOR DATA INLEZEN ---
 def load_rheo_data(file):
+    # 1. Lees het bestand eerst in als tekst om de juiste startregel te vinden
+    try:
+        content = file.getvalue().decode('utf-8').splitlines()
+    except UnicodeDecodeError:
+        content = file.getvalue().decode('latin-1').splitlines()
+    
+    start_row = 0
+    for i, line in enumerate(content):
+        if "Point No." in line:
+            start_row = i
+            break
+    
+    # 2. Lees het bestand in met Pandas
+    file.seek(0)
+    try:
+        # on_bad_lines='warn' zorgt dat hij niet crasht op gekke regels
+        df = pd.read_csv(file, sep='\t', skiprows=start_row, encoding='utf-8', on_bad_lines='warn')
+    except UnicodeDecodeError:
+        file.seek(0)
+        df = pd.read_csv(file, sep='\t', skiprows=start_row, encoding='latin-1', on_bad_lines='warn')
+
+    # 3. OPSCHONEN (Cruciaal voor dit specifieke bestand):
+    # Verwijder kolommen die volledig leeg zijn (door de extra tabs)
+    df = df.dropna(axis=1, how='all')
+    
+    # Verwijder de eenheden-rij (die heeft geen getal in 'Point No.')
+    # En zorg dat 'Point No.' een getal is
+    df['Point No.'] = pd.to_numeric(df['Point No.'], errors='coerce')
+    df = df.dropna(subset=['Point No.'])
+    
+    # 4. Kolomnamen mappen
+    # We zoeken de kolommen op basis van trefwoorden omdat reometers vaak spaties/tabs toevoegen
+    mapping = {}
+    for col in df.columns:
+        if 'Temperature' in col: mapping[col] = 'T'
+        if 'Angular Frequency' in col: mapping[col] = 'omega'
+        if 'Storage Modulus' in col: mapping[col] = 'Gp'
+        if 'Loss Modulus' in col: mapping[col] = 'Gpp'
+    
+    df = df.rename(columns=mapping)
+    
+    # Forceer alles naar nummers
+    for col in ['T', 'omega', 'Gp', 'Gpp']:
+        if col in df.columns:
+            df[col] = pd.to_numeric(df[col], errors='coerce')
+    
+    # Soms staan er nog tekstregels onderaan het bestand, die filteren we hier weg
+    return df.dropna(subset=['omega', 'Gp', 'T'])
     # Probeer eerst utf-8, als dat faalt gebruik latin-1
     try:
         content = file.getvalue().decode('utf-8').splitlines()
