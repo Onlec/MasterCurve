@@ -140,7 +140,11 @@ if uploaded_file:
         selected_temps = st.sidebar.multiselect("Selecteer Temperaturen", temps, default=temps)
         ref_temp = st.sidebar.selectbox("Referentie T (°C)", selected_temps, index=len(selected_temps)//2)
         cmap_opt = st.sidebar.selectbox("Kleurenschema", ["coolwarm", "viridis", "magma", "jet"])
-        
+
+        st.sidebar.divider()
+        st.sidebar.markdown("**WLF Optimalisatie**")
+        tg_hint = st.sidebar.number_input("Verwachte Tg (°C) voor WLF-hint", value=-40.0)
+
         if 'shifts' not in st.session_state: 
             st.session_state.shifts = {t: 0.0 for t in temps}
         if 'reset_id' not in st.session_state: 
@@ -173,7 +177,7 @@ if uploaded_file:
         for t in selected_temps:
             st.session_state.shifts[t] = st.sidebar.slider(
                 f"{int(t)}°C", 
-                -15.0, 15.0, 
+                -10.0, 10.0, 
                 float(st.session_state.shifts[t]), 
                 0.1, 
                 key=f"{t}_{st.session_state.reset_id}"
@@ -205,7 +209,10 @@ if uploaded_file:
         color_map = plt.get_cmap(cmap_opt)
         colors = color_map(np.linspace(0, 0.9, len(selected_temps)))
         
-
+        # Startwaarden aanpassen op basis van Tg
+        c2_init = max(50.0, ref_temp - tg_hint) 
+        res_wlf = minimize(wlf_err, x0=[17.4, c2_init])
+        wlf_c1, wlf_c2 = res_wlf.x
 
         st.subheader(f"{sample_name}")
         # --- TABS ---
@@ -315,6 +322,8 @@ if uploaded_file:
                 st.metric("Ea (Arrhenius)", f"{ea_final:.1f} kJ/mol")
                 st.write(f"**WLF C1:** {wlf_c1:.2f}")
                 st.write(f"**WLF C2:** {wlf_c2:.2f}")
+                if ea_final > 150:
+                    st.info("💡 Hoge Ea: Dit materiaal reageert zeer gevoelig op temperatuurveranderingen in de extruder/oven.")
                 st.warning("""
                 **Welke te volgen?**
                 * Gebruik **Arrhenius** ($E_a$) als de TPU ver boven $T_g$ is (meestal in de smelt).
@@ -336,7 +345,8 @@ if uploaded_file:
                 ax_h.grid(True, alpha=0.3)
                 st.pyplot(fig_h)
                 st.caption("Gevaar: Als de lijnen spreiden, verandert de morfologie en is TTS ongeldig.")
-            
+                st.markdown('<div class="warning-note"><b>TPU Check:</b> Zie je een opwaartse shift bij hogere temperaturen? Dat duidt op <b>thermal crosslinking</b> (na-reactie van NCO groepen).</div>', unsafe_allow_html=True)
+                
             with cv2:
                 st.write("**2. Cole-Cole Plot ($\\eta''$ vs $\\eta'$)**")
                 fig_c, ax_c = plt.subplots()
@@ -479,9 +489,17 @@ if uploaded_file:
             col_d.metric("Terminal G' Slope", f"{slope_term:.2f}", help="Ideaal voor lineaire polymeren is 2.0")
             
             # Interpretatie
-            if slope_term < 1.5:
-                st.warning("De terminale helling is laag (< 1.5). Dit kan duiden op lange-keten branching of een onvolledige relaxatie door hard-segment domeinen.")
-                
+            if slope_term < 1.7:
+                st.error(f"⚠️ **Lage helling gedetecteerd ({slope_term:.2f})**")
+                st.markdown(f"""
+                **Analyse voor Productie:**
+                * **Mogelijke oorzaak:** Onvolledig gesmolten harde segmenten (fysiek netwerk).
+                * **Gevolg:** De coating vloeit niet goed uit.
+                * **Advies:** Verhoog de verwerkingstemperatuur in zone 1 van de machine of controleer op crosslinking.
+                """)
+            else:
+                st.success("✅ Materiaal vertoont goed vloeigedrag (lineair regime).")
+
             st.subheader("Overzichtstabel")
             st.table(summ_df)
             
