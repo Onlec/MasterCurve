@@ -19,24 +19,28 @@ def load_rheo_data(file):
     
     lines = raw_text.splitlines()
     
-    # Zoek de regel waar de tabel echt begint
     start_row = -1
     for i, line in enumerate(lines):
-        if "Point No." in line and "Temperature" in line:
+        # Specifieke check om de 'Interval data' samenvatting over te slaan
+        if "Point No." in line and "Temperature" in line and "Interval data:" not in line:
             start_row = i
             break
             
     if start_row == -1:
+        # Fallback voor als de bovenstaande check te streng is
+        for i, line in enumerate(lines):
+            if "Point No." in line and "Temperature" in line:
+                start_row = i
+                break
+
+    if start_row == -1:
         return pd.DataFrame()
 
     file.seek(0)
-    # Inlezen met tab-scheidingsteken
     df = pd.read_csv(file, sep='\t', skiprows=start_row, encoding='latin-1', on_bad_lines='warn')
 
-    # Kolomnamen opschonen (tabs/spaties weg)
     df.columns = df.columns.str.strip()
     
-    # Mapping naar standaardnamen (gebaseerd op jouw CSV)
     new_cols = {}
     for col in df.columns:
         c = col.lower()
@@ -48,19 +52,15 @@ def load_rheo_data(file):
     
     df = df.rename(columns=new_cols)
 
-    # Verwijder de eenheden-rij en herhaalde headers (Point No. moet numeriek zijn)
     if 'Point' in df.columns:
         df['Point'] = pd.to_numeric(df['Point'], errors='coerce')
         df = df.dropna(subset=['Point'])
     
-    # Zet alle meetwaarden om naar getallen (handelt E+05 af)
     for col in ['T', 'omega', 'Gp', 'Gpp']:
         if col in df.columns:
             df[col] = pd.to_numeric(df[col], errors='coerce')
             
-    # Alleen rijen met volledige data overhouden
     return df.dropna(subset=['T', 'omega', 'Gp'])
-
 # --- 2. SIDEBAR: DATA IMPORT ---
 st.sidebar.header("1. Data Import")
 uploaded_file = st.sidebar.file_uploader("Upload je Reometer CSV", type=['csv', 'txt'])
