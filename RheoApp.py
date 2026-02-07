@@ -16,62 +16,61 @@ def load_rheo_data(file):
     
     lines = raw_text.splitlines()
     
-    # Zoek de juiste startregel
+    # 1. Zoek de echte header (we negeren de samenvatting op regel 7)
     start_row = -1
     for i, line in enumerate(lines):
-        clean_line = line.strip().lower()
-        # We zoeken de regel met de kolommen, maar negeren de samenvattingssectie
-        if "point no." in clean_line and "temperature" in clean_line:
-            if "interval data:" not in clean_line:
+        clean_line = line.strip()
+        # Een echte dataregel heeft veel tabs en begint niet met "Interval data"
+        if "Point No." in clean_line and "Storage Modulus" in clean_line:
+            if "Interval data:" not in line:
                 start_row = i
                 break
-    
+
     if start_row == -1:
         return pd.DataFrame()
 
+    # 2. Lees het bestand in
     file.seek(0)
-    # Probeer in te lezen. We gebruiken 'sep=None' zodat pandas zelf de tab/comma detecteert
-    try:
-        df = pd.read_csv(file, sep=None, skiprows=start_row, engine='python', encoding='latin-1')
-    except:
-        file.seek(0)
-        df = pd.read_csv(file, sep='\t', skiprows=start_row, encoding='latin-1')
+    df = pd.read_csv(
+        file, 
+        sep='\t', 
+        skiprows=start_row, 
+        encoding='latin-1', 
+        on_bad_lines='warn',
+        skip_blank_lines=True
+    )
 
-    # Kolomnamen opschonen
+    # 3. Kolomnamen extreem goed schoonmaken
+    # Verwijder spaties, tabs en onzichtbare tekens
     df.columns = [str(c).strip() for c in df.columns]
     
-    # Mapping tabel voor verschillende reometer exports
-    mapping = {}
-    for col in df.columns:
-        c = col.lower()
-        if 'point' in c: mapping[col] = 'Point'
-        elif 'temp' in c: mapping[col] = 'T'
-        elif 'freq' in c: mapping[col] = 'omega'
-        elif 'storage' in c or "g'" == c.strip(): mapping[col] = 'Gp'
-        elif 'loss' in c or 'g"' in c.strip(): mapping[col] = 'Gpp'
-    
+    # 4. Mapping (gebaseerd op jouw exacte kolomnamen)
+    mapping = {
+        'Temperature': 'T',
+        'Angular Frequency': 'omega',
+        'Storage Modulus': 'Gp',
+        'Loss Modulus': 'Gpp'
+    }
     df = df.rename(columns=mapping)
 
-    # Cruciaal: Verwijder rijen die eenheden bevatten (zoals [°C]) 
-    # of tekst uit volgende intervallen
-    def is_number(s):
-        try:
-            float(str(s).replace(',', '.'))
-            return True
-        except:
-            return False
+    # 5. Filter de rommel eruit
+    # We zoeken de eerste kolom die 'Point' bevat (vaak 'Point No.')
+    point_col = [c for c in df.columns if 'Point' in c]
+    if point_col:
+        # Gooi rijen weg die geen getal zijn (zoals de eenhedenrij [°C])
+        df[point_col[0]] = pd.to_numeric(df[point_col[0]], errors='coerce')
+        df = df.dropna(subset=[point_col[0]])
 
-    if 'Point' in df.columns:
-        # Behoud alleen rijen waar Point een getal is
-        df = df[df['Point'].apply(is_number)]
-    
-    # Zet alles om naar numerieke waarden
-    for col in ['T', 'omega', 'Gp', 'Gpp']:
+    # 6. Forceer numeriek en verwijder NaN's in cruciale kolommen
+    for col in ['T', 'omega', 'Gp']:
         if col in df.columns:
+            # Vervang eventuele komma's door punten voor de zekerheid
             df[col] = pd.to_numeric(df[col].astype(str).str.replace(',', '.'), errors='coerce')
-            
+    
+    # Debug: laat zien welke kolommen we hebben gevonden in de console/Streamlit
+    # st.write("Gevonden kolommen:", list(df.columns)) 
+    
     return df.dropna(subset=['T', 'omega', 'Gp'])
-
 # --- SIDEBAR ---
 st.sidebar.header("1. Data Import")
 uploaded_file = st.sidebar.file_uploader("Upload je Reometer CSV", type=['csv', 'txt'])
