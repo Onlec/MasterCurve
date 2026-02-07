@@ -206,6 +206,7 @@ if uploaded_file:
             ax3.set_ylim(0, 95)
             ax3.axhline(90, color='red', linestyle='--', alpha=0.2)
             ax3.grid(True, which="both", alpha=0.2)
+            ax3.legend(loc='lower right', fontsize=8, ncol=2)
             st.pyplot(fig3)
         
         with col2:
