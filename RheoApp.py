@@ -170,47 +170,45 @@ if uploaded_file:
         
         # Knoppen naast elkaar: Auto-align en Reset
         col_auto, col_reset = st.sidebar.columns(2)
-        if col_reset.button("🔄 Reset Shifts"):
+        if col_reset.button("🔄 Reset"):
             for t in temps:
                 st.session_state.shifts[t] = 0.0
             st.rerun()
 
         # Automatische uitlijning
-        if st.sidebar.button("🚀 Automatisch Uitlijnen"):
+        if st.sidebar.button("🚀 Automatic"):
             for t in selected_temps:
-                st.session_state.shifts[t] = st.sidebar.slider(
-                    f"log(aT) @ {t}°C", -10.0, 10.0, st.session_state.shifts[t], key=f"slider_{t}"
+                st.sidebar.markdown(f"**Temperatuur: {t}°C**")
+                # Maak twee kolommen: 70% voor de slider, 30% voor de plus/min knoppen
+                col_slide, col_input = st.sidebar.columns([0.7, 0.3])
+                
+                # De Slider (voor grove stappen)
+                val_slider = col_slide.slider(
+                    "Versleep", 
+                    -10.0, 10.0, 
+                    st.session_state.shifts[t],
+                    step=0.1,
+                    key=f"slider_{t}",
+                    label_visibility="collapsed" # Verbergt dubbele tekst
                 )
-                if t == ref_temp:
-                    st.session_state.shifts[t] = 0.0
-                    continue
                 
-                def objective(log_at):
-                    """Minimaliseer verschil tussen verschoven curve en referentie"""
-                    ref_data = df[df['T_group'] == ref_temp]
-                    target_data = df[df['T_group'] == t]
-                    
-                    # Log schaal voor beide
-                    log_w_ref = np.log10(ref_data['omega'])
-                    log_g_ref = np.log10(ref_data['Gp'])
-                    log_w_target = np.log10(target_data['omega']) + log_at
-                    log_g_target = np.log10(target_data['Gp'])
-                    
-                    # Interpoleer referentie curve
-                    f_interp = interp1d(log_w_ref, log_g_ref, bounds_error=False, fill_value=np.nan)
-                    val_at_target = f_interp(log_w_target)
-                    
-                    # Bereken sum of squares voor overlap regio
-                    mask = ~np.isnan(val_at_target)
-                    if np.sum(mask) < 2:
-                        return 9999  # Te weinig overlap
-                    
-                    return np.sum((val_at_target[mask] - log_g_target.values[mask])**2)
+                # Het Getal-invoervak (met pijltjes voor stappen van 0.1)
+                val_input = col_input.number_input(
+                    "Stap",
+                    min_value=-10.0,
+                    max_value=10.0,
+                    value=val_slider,
+                    step=0.1,
+                    key=f"num_{t}",
+                    label_visibility="collapsed"
+                )
                 
-                # Optimaliseer shift factor
-                res = minimize(objective, x0=0.0, method='Nelder-Mead')
-                st.session_state.shifts[t] = float(res.x[0])
-            
+                # Update de session state met de waarde van de number_input
+                # (Streamlit synchroniseert de slider en input automatisch via de waarde-koppeling)
+                st.session_state.shifts[t] = val_input
+                st.sidebar.markdown("---")
+                
+
             st.sidebar.success("Automatische uitlijning compleet!")
         
         # Handmatige sliders voor fine-tuning
