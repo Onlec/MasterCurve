@@ -84,14 +84,16 @@ def load_rheo_data(file):
 def extract_sample_name(file):
         try:
             file.seek(0)
-            # Lees de eerste paar regels in
-            content = file.read()
-            # Decodeer (gebruik dezelfde logica als in je load functie)
-            if isinstance(content, bytes):
-                text = content.decode('latin-1') 
+            raw_bytes = file.read()
+            if raw_bytes[:2] == b'\xff\xfe': 
+                decoded_text = raw_bytes.decode('utf-16-le')
+            elif raw_bytes[:3] == b'\xef\xbb\xbf': 
+                decoded_text = raw_bytes.decode('utf-8-sig')
             else:
-                text = content
-                
+                try: 
+                    decoded_text = raw_bytes.decode('latin-1')
+                except: 
+                    decoded_text = raw_bytes.decode('utf-8')
             lines = text.splitlines()
             
             if len(lines) >= 3:
@@ -213,7 +215,7 @@ if uploaded_file:
             ])
 
         with tab1:
-            st.subheader(f"{sample_name}Master Curve bij {ref_temp}°C")
+            st.subheader(f"Master Curve bij {ref_temp}°C")
             col_m1, col_m2 = st.columns([2, 1])
             
             with col_m1:
