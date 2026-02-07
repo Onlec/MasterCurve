@@ -8,7 +8,6 @@ from io import BytesIO
 
 # --- CONFIGURATIE & STYLING ---
 st.set_page_config(page_title="RheoApp", layout="wide")
-
 # Custom CSS voor betere leesbaarheid van expert-notes
 st.markdown("""
     <style>
@@ -203,6 +202,9 @@ if uploaded_file:
         color_map = plt.get_cmap(cmap_opt)
         colors = color_map(np.linspace(0, 0.9, len(selected_temps)))
         
+
+        st.title("RheoApp")
+        st.subheader(f"{sample_name}")
         # --- TABS ---
         tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
                 "📈 Master Curve", "🧪 Structuur", "📉 tan δ Analyse", 
