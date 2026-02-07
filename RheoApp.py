@@ -16,35 +16,28 @@ def load_rheo_data(file):
     
     lines = raw_text.splitlines()
     
-    # 1. Zoek de echte header (we negeren de samenvatting op regel 7)
+    # 1. Zoek de echte header regel (Anton Paar stijl)
     start_row = -1
     for i, line in enumerate(lines):
-        clean_line = line.strip()
-        # Een echte dataregel heeft veel tabs en begint niet met "Interval data"
+        clean_line = line.replace('\t', ' ').strip()
+        # Zoek naar de kolomnamen ongeacht hoeveel tabs eromheen staan
         if "Point No." in clean_line and "Storage Modulus" in clean_line:
-            if "Interval data:" not in line:
+            if "Interval data:" not in clean_line:
                 start_row = i
                 break
 
     if start_row == -1:
         return pd.DataFrame()
 
-    # 2. Lees het bestand in
+    # 2. Lees in. We gebruiken sep='\t' maar we maken de kolommen daarna handmatig schoon
     file.seek(0)
-    df = pd.read_csv(
-        file, 
-        sep='\t', 
-        skiprows=start_row, 
-        encoding='latin-1', 
-        on_bad_lines='warn',
-        skip_blank_lines=True
-    )
+    df = pd.read_csv(file, sep='\t', skiprows=start_row, encoding='latin-1')
 
-    # 3. Kolomnamen extreem goed schoonmaken
-    # Verwijder spaties, tabs en onzichtbare tekens
-    df.columns = [str(c).strip() for c in df.columns]
+    # 3. VERWIJDER ELKE TAB EN SPATIE UIT DE KOLOMNAMEN
+    # Dit is cruciaal omdat jouw CSV kolommen heeft als '\t\tTemperature'
+    df.columns = [c.strip() for c in df.columns]
     
-    # 4. Mapping (gebaseerd op jouw exacte kolomnamen)
+    # 4. Mapping met exacte namen uit jouw file snippet
     mapping = {
         'Temperature': 'T',
         'Angular Frequency': 'omega',
@@ -53,24 +46,26 @@ def load_rheo_data(file):
     }
     df = df.rename(columns=mapping)
 
-    # 5. Filter de rommel eruit
-    # We zoeken de eerste kolom die 'Point' bevat (vaak 'Point No.')
-    point_col = [c for c in df.columns if 'Point' in c]
-    if point_col:
-        # Gooi rijen weg die geen getal zijn (zoals de eenhedenrij [°C])
-        df[point_col[0]] = pd.to_numeric(df[point_col[0]], errors='coerce')
-        df = df.dropna(subset=[point_col[0]])
+    # 5. Filter de eenheden-rijen en status-waarschuwingen
+    def force_float(val):
+        try:
+            # Verwijder ook eventuele wetenschappelijke notatie spaties
+            return float(str(val).replace(',', '.').strip())
+        except:
+            return np.nan
 
-    # 6. Forceer numeriek en verwijder NaN's in cruciale kolommen
-    for col in ['T', 'omega', 'Gp']:
+    for col in ['T', 'omega', 'Gp', 'Gpp']:
         if col in df.columns:
-            # Vervang eventuele komma's door punten voor de zekerheid
-            df[col] = pd.to_numeric(df[col].astype(str).str.replace(',', '.'), errors='coerce')
+            df[col] = df[col].apply(force_float)
     
-    # Debug: laat zien welke kolommen we hebben gevonden in de console/Streamlit
-    # st.write("Gevonden kolommen:", list(df.columns)) 
+    # EXTRA: Filter op positieve waarden voor log-berekeningen later
+    df = df[(df['Gp'] > 0) & (df['omega'] > 0)]
     
-    return df.dropna(subset=['T', 'omega', 'Gp'])
+    # Verwijder rijen waar essentiële data (T of Gp) ontbreekt
+    df = df.dropna(subset=['T', 'Gp'])
+    
+    return df
+
 # --- SIDEBAR ---
 st.sidebar.header("1. Data Import")
 uploaded_file = st.sidebar.file_uploader("Upload je Reometer CSV", type=['csv', 'txt'])
@@ -112,6 +107,11 @@ if uploaded_file:
             st.session_state.shifts[t] = st.sidebar.slider(f"log(aT) @ {t}°C", -10.0, 10.0, st.session_state.shifts[t])
 
         # --- GRAFIEKEN ---
+        if df.empty:
+            st.error("Bestand gelezen, maar geen numerieke data gevonden. Check het CSV formaat.")
+        else:
+            st.write(f"Voorbeeld van ingeladen data (eerste 3 rijen):")
+            st.dataframe(df[['T', 'omega', 'Gp']].head(3))
         col1, col2 = st.columns([2, 1])
         with col1:
             st.subheader("Master Curve")
@@ -123,6 +123,7 @@ if uploaded_file:
                 ax1.loglog(data['omega'] * a_t, data['Gp'], 'o-', color=color, label=f"{t}°C G'")
                 if 'Gpp' in data.columns:
                     ax1.loglog(data['omega'] * a_t, data['Gpp'], 'x--', color=color, alpha=0.3)
+
             ax1.set_xlabel("Verschoven Frequentie ω·aT (rad/s)")
             ax1.set_ylabel("Modulus G', G'' (Pa)")
             ax1.grid(True, which="both", alpha=0.3)
