@@ -20,28 +20,6 @@ st.markdown("""
 # --- FUNCTIES ---
 def load_rheo_data(file):
 
-    def extract_sample_name(file):
-        try:
-            file.seek(0)
-            # Lees de eerste paar regels in
-            content = file.read()
-            # Decodeer (gebruik dezelfde logica als in je load functie)
-            if isinstance(content, bytes):
-                text = content.decode('latin-1') 
-            else:
-                text = content
-                
-            lines = text.splitlines()
-            
-            if len(lines) >= 3:
-                row_3 = lines[2].split('\t') # Splitsen op tab
-                if len(row_3) >= 2:
-                    sample_name = row_3[1].strip() # Kolom 2
-                    return sample_name if sample_name else "Onbekend_Sample"
-            
-            return "Onbekend_Sample"
-        except Exception as e:
-            return f"Error_bij_lezen_{e}"
     
     try:
         file.seek(0)
@@ -102,6 +80,29 @@ def load_rheo_data(file):
             df[col] = df[col].apply(safe_float)
     
     return df.dropna(subset=['T', 'omega', 'Gp']).query("Gp > 0 and omega > 0")
+
+def extract_sample_name(file):
+        try:
+            file.seek(0)
+            # Lees de eerste paar regels in
+            content = file.read()
+            # Decodeer (gebruik dezelfde logica als in je load functie)
+            if isinstance(content, bytes):
+                text = content.decode('latin-1') 
+            else:
+                text = content
+                
+            lines = text.splitlines()
+            
+            if len(lines) >= 3:
+                row_3 = lines[2].split('\t') # Splitsen op tab
+                if len(row_3) >= 2:
+                    sample_name = row_3[1].strip() # Kolom 2
+                    return sample_name if sample_name else "Onbekend_Sample"
+            
+            return "Onbekend_Sample"
+        except Exception as e:
+            return f"Error_bij_lezen_{e}"
 
 def to_excel(summary_df, shift_df, crossover_df):
     output = BytesIO()
