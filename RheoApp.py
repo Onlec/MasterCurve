@@ -467,7 +467,7 @@ if uploaded_file:
             # Visuele extrapolatie plot
             st.subheader("Extrapolatie naar η₀ (Cross Model)")
             fig_ext, ax_ext = plt.subplots()
-            w_fit = np.logspace(np.log10(ma_df['w_s'].min())-2, np.log10(m_df['w_s'].max()), 100)
+            w_fit = np.logspace(np.log10(m_df['w_s'].min())-2, np.log10(m_df['w_s'].max()), 100)
             
             ax_ext.loglog(master_df['w_s'], master_df['eta_s'], 'ko', alpha=0.3, label='Meetdata')
             if not np.isnan(eta0):
