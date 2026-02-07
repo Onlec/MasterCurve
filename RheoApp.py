@@ -129,6 +129,7 @@ uploaded_file = st.sidebar.file_uploader("Upload Anton Paar CSV/TXT", type=['csv
 
 if uploaded_file:
     df = load_rheo_data(uploaded_file)
+    sampple_name=extract_sample_name(uploaded_file)
     
     if not df.empty:
         df['T_group'] = df['T'].round(0)
