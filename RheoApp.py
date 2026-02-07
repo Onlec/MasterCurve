@@ -151,48 +151,34 @@ if uploaded_file:
                 st.session_state.shifts[t] = round(float(res.x[0]), 2)
             st.rerun()
 
-        st.sidebar.markdown("---")
-        st.sidebar.subheader("Fijninstelling (log aT)")
-        st.sidebar.caption("Gebruik de pijltjes voor +/- 0.1")
-
         # --- HANDMATIGE AANPASSINGEN MET KOPPELING ---
+        # --- HANDMATIGE AANPASSINGEN (GEKOPPELD) ---
         st.sidebar.markdown("---")
         st.sidebar.subheader("Fijninstelling (log aT)")
-        st.sidebar.caption("Slider en vakje zijn gekoppeld")
 
         for t in selected_temps:
             st.sidebar.markdown(f"**Temperatuur: {t}°C**")
-            
-            # We gebruiken 2 kolommen voor de slider en het vakje
             c1, c2 = st.sidebar.columns([0.65, 0.35])
             
-            # 1. Update de waarde via het numerieke vakje (c2)
-            # De 'key' zorgt ervoor dat Streamlit de staat onthoudt
+            # We gebruiken de session_state direct als bron
+            current_val = st.session_state.shifts[t]
+
+            # 1. De Slider
+            # Als je de slider beweegt, updatet hij direct de shift factor
+            new_val = c1.slider(
+                f"S_{t}", -15.0, 15.0, float(current_val), 
+                step=0.1, key=f"slide_{t}", label_visibility="collapsed"
+            )
+            
+            # 2. Het Invoervakje 
+            # Dit vakje kijkt nu ALTIJD naar de waarde van de slider
             val_input = c2.number_input(
-                "Waarde", 
-                min_value=-15.0, 
-                max_value=15.0, 
-                value=float(st.session_state.shifts[t]), 
-                step=0.1, 
-                format="%.1f",
-                key=f"num_{t}",
-                label_visibility="collapsed"
+                f"N_{t}", -15.0, 15.0, value=float(new_val), 
+                step=0.1, format="%.1f", key=f"num_{t}", label_visibility="collapsed"
             )
-
-            # 2. De slider (c1) koppelen aan diezelfde waarde
-            val_slider = c1.slider(
-                "Slider", 
-                min_value=-15.0, 
-                max_value=15.0, 
-                value=float(val_input), # Hij kijkt naar de input
-                step=0.1,
-                key=f"slide_{t}",
-                label_visibility="collapsed"
-            )
-
-            # Sla de uiteindelijke waarde op in de state voor de grafieken
-            # We geven prioriteit aan de slider omdat die directer reageert
-            st.session_state.shifts[t] = val_slider
+            
+            # Update de globale staat
+            st.session_state.shifts[t] = val_input
 
         # --- VISUALISATIE ---
         st.write("### Ingeladen Data Preview")
