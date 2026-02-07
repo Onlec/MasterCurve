@@ -85,7 +85,7 @@ if uploaded_file:
         
         st.sidebar.header("2. TTS Instellingen")
         selected_temps = st.sidebar.multiselect("Selecteer temperaturen", temps, default=temps)
-        ref_temp = st.sidebar.selectbox("Referentie T (°C)", selected_temps, index=len(selected_temps)//2)
+        ref_temp = st.sidebar.selectbox("Referentie T (°C)", selected_temps if selected_temps else temps, index=len(selected_temps)//2 if selected_temps else 0)
         
         if 'shifts' not in st.session_state:
             st.session_state.shifts = {t: 0.0 for t in temps}
@@ -164,7 +164,7 @@ if uploaded_file:
 
         with tab2:
             st.subheader("Van Gurp-Palmen Plot")
-            st.info("💡 Liggen de lijnen niet op elkaar? Dan verandert de structuur van je TPU (smelt/vocht).")
+            st.info("💡 Liggen de lijnen niet op elkaar? Dan verandert de structuur van je TPU.")
             fig3, ax3 = plt.subplots(figsize=(10, 6))
             for t, color in zip(selected_temps, colors):
                 data = df[df['T_group'] == t].copy()
@@ -181,34 +181,66 @@ if uploaded_file:
             st.pyplot(fig3)
 
         with tab3:
-            st.subheader("Arrhenius Analyse")
+            st.subheader("Arrhenius & Viscositeit Analyse")
+            
+            # 1. Kies een frequentie voor de viscositeitsplot
+            all_omegas = sorted(df['omega'].unique())
+            target_omega = st.select_slider(
+                "Selecteer frequentie voor viscositeitsanalyse (rad/s)", 
+                options=all_omegas, 
+                value=all_omegas[len(all_omegas)//2]
+            )
+
+            # Data voorbereiden
             t_kelvin = np.array([t + 273.15 for t in selected_temps])
             inv_t = 1/t_kelvin
             log_at = np.array([st.session_state.shifts[t] for t in selected_temps])
             
+            viscosities = []
+            for t in selected_temps:
+                d_t = df[(df['T_group'] == t)]
+                idx = (d_t['omega'] - target_omega).abs().idxmin()
+                row = d_t.loc[idx]
+                g_star = np.sqrt(row['Gp']**2 + row['Gpp']**2)
+                viscosities.append(np.log10(g_star / row['omega']))
+            
+            log_eta = np.array(viscosities)
+
             if len(selected_temps) > 2:
-                coeffs = np.polyfit(inv_t, log_at, 1)
-                ea = (coeffs[0] * 8.314 * np.log(10)) / 1000
+                coeffs_at = np.polyfit(inv_t, log_at, 1)
+                coeffs_eta = np.polyfit(inv_t, log_eta, 1)
                 
-                col_ea_plot, col_ea_val = st.columns([2, 1])
-                with col_ea_plot:
-                    fig4, ax4 = plt.subplots(figsize=(8, 5))
+                # R2 voor log_at
+                p_at = np.poly1d(coeffs_at)
+                y_resid = log_at - p_at(inv_t)
+                r2 = 1 - (np.sum(y_resid**2) / np.sum((log_at - np.mean(log_at))**2))
+                
+                ea = (coeffs_at[0] * 8.314 * np.log(10)) / 1000
+                
+                col_left, col_right = st.columns(2)
+                with col_left:
+                    st.markdown("**1. Shift Factor Fit (Ea)**")
+                    fig4, ax4 = plt.subplots(figsize=(6, 4))
                     ax4.plot(inv_t, log_at, 'o', color='#FF4B4B', label='Meetdata')
-                    ax4.plot(inv_t, np.polyval(coeffs, inv_t), 'k--', alpha=0.6, label='Arrhenius Fit')
+                    ax4.plot(inv_t, np.polyval(coeffs_at, inv_t), 'k--', alpha=0.6, label=f'R² = {r2:.4f}')
                     ax4.set_xlabel("1/T (1/K)")
                     ax4.set_ylabel("log(aT)")
                     ax4.legend()
-                    ax4.grid(True, alpha=0.2)
                     st.pyplot(fig4)
-                with col_ea_val:
-                    st.metric("Activeringsenergie (Ea)", f"{abs(ea):.1f} kJ/mol")
-                    st.write("---")
-                    st.write("**Hoe lees ik dit?**")
-                    st.caption("Een Ea tussen 60-150 kJ/mol is normaal voor TPU. Als de punten een curve vormen in plaats van een rechte lijn, volgt je materiaal de WLF-wet in plaats van Arrhenius.")
-            else:
-                st.warning("Selecteer minimaal 3 temperaturen voor deze analyse.")
+                    st.metric("Ea", f"{abs(ea):.1f} kJ/mol", delta=f"R²: {r2:.4f}")
 
+                with col_right:
+                    st.markdown(f"**2. Viscositeit @ {target_omega:.1f} rad/s**")
+                    fig5, ax5 = plt.subplots(figsize=(6, 4))
+                    ax5.plot(inv_t, log_eta, 's', color='#1f77b4')
+                    ax5.plot(inv_t, np.polyval(coeffs_eta, inv_t), 'k--', alpha=0.6)
+                    ax5.set_xlabel("1/T (1/K)")
+                    ax5.set_ylabel("log(η*) [Pa·s]")
+                    st.pyplot(fig5)
+                    st.info(f"Viscositeit helling: {coeffs_eta[0]:.0f}")
+            else:
+                st.warning("Selecteer minimaal 3 temperaturen.")
     else:
-        st.error("Bestand bevat geen geldige temperatuurdata.")
+        st.error("Geen geldige data gevonden.")
 else:
-    st.info("👋 Welkom! Upload een Anton Paar CSV export om te beginnen.")
+    st.info("👋 Upload een Anton Paar CSV om te beginnen.")
