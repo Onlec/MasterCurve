@@ -103,38 +103,56 @@ if uploaded_file:
             st.session_state.reset_id = 0
 
         c_auto, c_reset = st.sidebar.columns(2)
+        
+        # RESET KNOP
         if c_reset.button("🔄 Reset"):
             for t in temps: 
                 st.session_state.shifts[t] = 0.0
-            st.session_state.reset_id += 1  # Verander de ID om sliders te forceren
+            st.session_state.reset_id += 1
             st.rerun()
 
+        # AUTO-ALIGN KNOP
         if c_auto.button("🚀 Auto-Align"):
             for t in selected_temps:
-                if t == ref_temp: continue
+                if t == ref_temp:
+                    st.session_state.shifts[t] = 0.0
+                    continue
+                
                 def objective(log_at):
-                    ref_d = df[df['T_group'] == ref_temp]
-                    tgt_d = df[df['T_group'] == t]
-                    f = interp1d(np.log10(ref_d['omega']), np.log10(ref_d['Gp']), bounds_error=False)
-                    v = f(np.log10(tgt_d['omega']) + log_at)
-                    m = ~np.isnan(v)
-                    return np.sum((v[m] - np.log10(tgt_d['Gp'].values[m]))**2) if np.sum(m) >= 2 else 9999
-                res = minimize(objective, x0=0.0, method='Nelder-Mead')
+                    ref_data = df[df['T_group'] == ref_temp]
+                    target_data = df[df['T_group'] == t]
+                    log_w_ref = np.log10(ref_data['omega'])
+                    log_g_ref = np.log10(ref_data['Gp'])
+                    log_w_target = np.log10(target_data['omega']) + log_at
+                    log_g_target = np.log10(target_data['Gp'])
+                    
+                    f_interp = interp1d(log_w_ref, log_g_ref, bounds_error=False, fill_value=np.nan)
+                    val_at_target = f_interp(log_w_target)
+                    mask = ~np.isnan(val_at_target)
+                    
+                    if np.sum(mask) < 2: return 9999
+                    return np.sum((val_at_target[mask] - log_g_target.values[mask])**2)
+
+                res = minimize(objective, x0=st.session_state.shifts[t], method='Nelder-Mead')
                 st.session_state.shifts[t] = round(float(res.x[0]), 2)
+            
+            # CRUCIAAL: Verhoog de ID zodat de sliders de nieuwe waarden laden
+            st.session_state.reset_id += 1 
             st.rerun()
 
         st.sidebar.markdown("---")
         st.sidebar.subheader("Handmatige Shift (log aT)")
         
         for t in selected_temps:
-            # De key bevat nu de reset_id (bijv. "slide_110_0")
+            # Door de key te veranderen bij elke auto-align/reset, 
+            # springt de slider fysiek naar de berekende waarde.
             st.session_state.shifts[t] = st.sidebar.slider(
-                f"Temperatuur: {int(t)}°C", 
+                f"{int(t)}°C", 
                 -15.0, 15.0, 
                 float(st.session_state.shifts[t]), 
                 step=0.1,
                 format="%.1f",
-                key=f"slide_{t}_{st.session_state.reset_id}" 
+                key=f"slide_{t}_{st.session_state.reset_id}"
             )
 
         # --- VISUALISATIE ---
