@@ -1,7 +1,13 @@
 import streamlit as st
 import pandas as pd
-from translations import get_translations
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib as mpl
+from scipy.optimize import minimize, curve_fit
+from scipy.interpolate import interp1d, UnivariateSpline
+from io import BytesIO
 
+from translations import get_translations
 # Altijd controleren of de taal er is
 if 'lang' not in st.session_state:
     st.session_state.lang = 'EN'

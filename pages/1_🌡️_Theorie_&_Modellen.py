@@ -1,6 +1,11 @@
 import streamlit as st
+import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib as mpl
+from scipy.optimize import minimize, curve_fit
+from scipy.interpolate import interp1d, UnivariateSpline
+from io import BytesIO
 
 from translations import get_translations
 
