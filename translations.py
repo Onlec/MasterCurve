@@ -3,11 +3,12 @@
 def get_translations():
     return {
         "NL": {
-            # Sidebar & Algemeen
+            # Algemeen & Navigatie
+            "app_title": "RheoApp - Master Curve & Analyse Tool",
             "lang_label": "Taal / Language",
-            "nav_title": "📚 Documentatie",
-            "upload_info": "👆 Upload een frequency sweep CSV/TXT bestand om te beginnen.",
+            "nav_doc": "📚 Documentatie",
             "quick_links": "🎯 Quick Links",
+            "instruction_header": "📖 Snelstartgids & Expert Workflow",
             
             # Dashboard Metrics (Tab 7)
             "ea_metric": "Flow Activatie (Ea)",
@@ -15,29 +16,37 @@ def get_translations():
             "adj_r2": "TTS Adj. R²",
             "cos_metric": "Crossovers",
             
-            # Dashboard Tabel & Secties
+            # Theorie Pagina (Page 1)
+            "tab_tts": "🕒 Time-Temperature Superposition",
+            "tab_therm": "🔥 Thermische Modellen",
+            "tab_struc": "🏗️ Structurele Parameters",
+            "quick_ref_title": "📋 Quick Reference: Typische TPU Waarden",
+            "alarm_label": "Alarm als",
+            
+            # Interpretatie Pagina (Page 2)
+            "tab_vgp": "📊 Van Gurp-Palmen",
+            "tab_han": "🔬 Han Plot",
+            "tab_scenarios": "💼 Praktijk Scenario's",
+            "scenario_1": "Scenario 1: Fase-scheiding",
+            "scenario_2": "Scenario 2: Degradatie/Hydrolyse",
+            
+            # Data & Troubleshooting (Page 3)
+            "tab_format": "📄 Data Formaat",
+            "tab_errors": "🔧 Foutmeldingen",
+            "tab_tpu": "🧪 TPU Meetadvies",
+            
+            # Dashboard Tabel & Status
             "summary_header": "📋 Rheologische Parameters",
             "model_reliability": "🔍 Model Betrouwbaarheid",
             "thermal_models": "Thermische Modellen",
             "structural_quality": "Structurele Kwaliteit",
-            "crossover_header": "⚖️ Crossover Punten",
-            "export_header": "💾 Data Export",
-            
-            # Specifieke Parameters
-            "wlf_c1": "WLF C₁",
-            "wlf_c2": "WLF C₂",
-            "vft_t0": "VFT T₀ (Vogel Temp)",
+            "vft_label": "VFT T₀ (Vogel Temp)",
             "tg_est": "Geschatte Tg",
             "slope_label": "Terminal Slope G'",
             "plateau_label": "Plateau Modulus (Gₙ⁰)",
-            
-            # Diagnose Berichten
             "status_ok": "✅ Stabiel / OK",
             "status_warn": "⚠️ Atypisch",
             "status_error": "❌ Fout / Ongeldig",
-            "vGP_check": "Check Page 2: Van Gurp-Palmen op fase-scheiding.",
-            "han_check": "Check Page 2: Han Plot (Degradatie).",
-            "complex_warn": "Thermorheologisch complex! Zie Page 2.",
             
             # Buttons
             "btn_params": "📊 Parameters CSV",
@@ -46,11 +55,12 @@ def get_translations():
             "btn_master": "📈 Master Curve CSV"
         },
         "EN": {
-            # Sidebar & General
+            # General & Navigation
+            "app_title": "RheoApp - Master Curve & Analysis Tool",
             "lang_label": "Language / Taal",
-            "nav_title": "📚 Documentation",
-            "upload_info": "👆 Upload a frequency sweep CSV/TXT file to get started.",
+            "nav_doc": "📚 Documentation",
             "quick_links": "🎯 Quick Links",
+            "instruction_header": "📖 Quick Start & Expert Workflow",
             
             # Dashboard Metrics (Tab 7)
             "ea_metric": "Flow Activation (Ea)",
@@ -58,29 +68,37 @@ def get_translations():
             "adj_r2": "TTS Adj. R²",
             "cos_metric": "Crossovers",
             
-            # Dashboard Table & Sections
+            # Theory Page (Page 1)
+            "tab_tts": "🕒 Time-Temperature Superposition",
+            "tab_therm": "🔥 Thermal Models",
+            "tab_struc": "🏗️ Structural Parameters",
+            "quick_ref_title": "📋 Quick Reference: Typical TPU Values",
+            "alarm_label": "Alarm if",
+            
+            # Interpretation Page (Page 2)
+            "tab_vgp": "📊 Van Gurp-Palmen",
+            "tab_han": "🔬 Han Plot",
+            "tab_scenarios": "💼 Practice Scenarios",
+            "scenario_1": "Scenario 1: Phase Separation",
+            "scenario_2": "Scenario 2: Degradation/Hydrolysis",
+            
+            # Data & Troubleshooting (Page 3)
+            "tab_format": "📄 Data Format",
+            "tab_errors": "🔧 Error Messages",
+            "tab_tpu": "🧪 TPU Testing Advice",
+            
+            # Dashboard Table & Status
             "summary_header": "📋 Rheological Parameters",
             "model_reliability": "🔍 Model Reliability",
             "thermal_models": "Thermal Models",
             "structural_quality": "Structural Quality",
-            "crossover_header": "⚖️ Crossover Points",
-            "export_header": "💾 Data Export",
-            
-            # Specific Parameters
-            "wlf_c1": "WLF C₁",
-            "wlf_c2": "WLF C₂",
-            "vft_t0": "VFT T₀ (Vogel Temp)",
+            "vft_label": "VFT T₀ (Vogel Temp)",
             "tg_est": "Estimated Tg",
             "slope_label": "Terminal Slope G'",
             "plateau_label": "Plateau Modulus (Gₙ⁰)",
-            
-            # Diagnostic Messages
             "status_ok": "✅ Stable / OK",
             "status_warn": "⚠️ Atypical",
             "status_error": "❌ Error / Invalid",
-            "vGP_check": "Check Page 2: Van Gurp-Palmen for phase separation.",
-            "han_check": "Check Page 2: Han Plot (Degradation).",
-            "complex_warn": "Thermorheologically complex! See Page 2.",
             
             # Buttons
             "btn_params": "📊 Parameters CSV",
