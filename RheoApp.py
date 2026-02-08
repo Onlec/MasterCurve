@@ -620,85 +620,37 @@ if uploaded_file:
 
             st.divider()
 
-            # --- BLOK 2: CROSSOVER PUNTEN ---
-            st.subheader("⚖️ 3. Crossover Punten (Gel-Sol Overgang)")
+            # --- BLOK 2: CROSSOVER & EXPORTS ---
+            st.subheader("⚖️ 3. Crossover Punten")
             if not co_df.empty:
-                st.markdown("Deze punten markeren de overgang van elastisch (G' > G'') naar viskeus (G'' > G') gedrag per temperatuur.")
                 st.dataframe(co_df, use_container_width=True)
-            else:
-                st.warning("Geen crossover punten gedetecteerd. Materiaal blijft mogelijk dominant elastisch of viskeus in dit bereik.")
-
-            # --- EXCEL EXPORT ---
-            # We maken een schone export van de dashboard tabel
-            shift_export_df = pd.DataFrame({
-                'Temperatuur_C': selected_temps,
-                'log_aT': [st.session_state.shifts[t] for t in selected_temps]
-            })
             
-            excel_data = to_excel(summary_table_df, shift_export_df, co_df)
-            st.download_button(
-                label="📥 Download Geformatteerd Excel Rapport",
-                data=excel_data,
-                file_name=f"RheoReport_{sample_name}.xlsx",
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            )
-
             st.divider()
             st.subheader("💾 Data Export (CSV)")
-            st.write("Download de resultaten voor verdere analyse in Excel, Origin of Python:")
-
-            # We gebruiken nu 4 kolommen voor de 4 verschillende CSV's
+            
             col_ex1, col_ex2, col_ex3, col_ex4 = st.columns(4)
 
-            # 1. Export Globale Parameters (Ea, η₀, etc.)
-            csv_summary = summary_table_df.to_csv(index=False).encode('utf-8')
-            col_ex1.download_button(
-                label="📊 Download Summary CSV",
-                data=csv_summary,
-                file_name=f"Summary_{sample_name}.csv",
-                mime="text/csv"
-            )
+            # 1. Summary CSV
+            col_ex1.download_button("📊 Summary CSV", summary_table_df.to_csv(index=False).encode('utf-8'), f"Summary_{sample_name}.csv", "text/csv")
 
-            # 2. Export Shift Factors (log aT per temperatuur)
-            shift_export_df = pd.DataFrame({
-                'Temperatuur_C': selected_temps,
-                'log_aT': [st.session_state.shifts[t] for t in selected_temps]
-            })
-            csv_shifts = shift_export_df.to_csv(index=False).encode('utf-8')
-            col_ex2.download_button(
-                label="🕒 Download Shift Factors CSV",
-                data=csv_shifts,
-                file_name=f"Shifts_{sample_name}.csv",
-                mime="text/csv"
-            )
+            # 2. Shifts CSV
+            shift_export_df = pd.DataFrame({'T_C': selected_temps, 'log_aT': [st.session_state.shifts[t] for t in selected_temps]})
+            col_ex2.download_button("🕒 Shifts CSV", shift_export_df.to_csv(index=False).encode('utf-8'), f"Shifts_{sample_name}.csv", "text/csv")
 
-            # 3. Export Crossover Punten
+            # 3. Crossovers CSV
             if not co_df.empty:
-                csv_co = co_df.to_csv(index=False).encode('utf-8')
-                col_ex3.download_button(
-                    label="⚖️ Download Crossovers CSV",
-                    data=csv_co,
-                    file_name=f"Crossovers_{sample_name}.csv",
-                    mime="text/csv"
-                )
+                col_ex3.download_button("⚖️ Crossovers CSV", co_df.to_csv(index=False).encode('utf-8'), f"Crossovers_{sample_name}.csv", "text/csv")
 
-            # 4. Export Volledige Master Curve Data (Verschoven punten)
-            # We selecteren de belangrijkste kolommen en geven ze duidelijke namen
-            master_export_df = m_df[['w_s', 'Gp', 'Gpp', 'eta_s', 'delta', 'T_group']].copy()
-            master_export_df.columns = [
-                'omega_shifted_rad_s', 'Storage_Modulus_Gp_Pa', 
-                'Loss_Modulus_Gpp_Pa', 'Complex_Viscosity_Pas', 
-                'Phase_Angle_deg', 'Original_Temp_C'
-            ]
+            # 4. Master Curve CSV (Nu met extra check op kolommen)
+            # Bereken tan_delta nog even snel voor de export
+            m_df['tan_delta'] = m_df['Gpp'] / m_df['Gp']
             
-            csv_master = master_export_df.to_csv(index=False).encode('utf-8')
-            col_ex4.download_button(
-                label="📈 Download Master Curve CSV",
-                data=csv_master,
-                file_name=f"MasterCurve_Data_{sample_name}.csv",
-                mime="text/csv"
-            )
+            export_cols = ['w_s', 'Gp', 'Gpp', 'eta_s', 'delta', 'tan_delta', 'T_group']
+            master_export_df = m_df[export_cols].copy()
+            master_export_df.columns = ['omega_shifted_rad_s', 'Gp_Pa', 'Gpp_Pa', 'Complex_Visc_Pas', 'PhaseAngle_deg', 'tan_delta', 'Original_T_C']
             
+            col_ex4.download_button("📈 Master Curve CSV", master_export_df.to_csv(index=False).encode('utf-8'), f"MasterCurve_{sample_name}.csv", "text/csv")
+
     else:
         st.error("❌ Geen data gevonden in het bestand. Controleer het bestandsformaat.")
 else:
