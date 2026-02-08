@@ -496,12 +496,13 @@ if uploaded_file:
                 st.pyplot(fig_t)
 
             with col_t2:
-                st.metric("Ea (Arrhenius)", f"{ea_final:.1f} kJ/mol")
+                st.metric("**Ea (Arrhenius):**", f"{ea_final:.1f} kJ/mol")
                 
                 # De Softening Point metric
-                st.metric("Estimated Softening Point", f"{t_softening:.1f} °C")
+                st.metric("**Estimated Softening Point:**", f"{t_softening:.1f} °C")
                 st.metric("**VFT T₀ (Vogel):**", f"{popt_vft[2]-273.15:.1f} °C" if vft_success else "VFT: N/A")
-                st.metric("**WLF C1 / C2:**",f"{wlf_c1:.1f} / {wlf_c2:.1f}")
+                st.metric("**WLF C1:**",f"{wlf_c1:.1f} / {wlf_c2:.1f}")
+                st.metric("**WLF C2:**",f"{wlf_c1:.1f} / {wlf_c2:.1f}")
                 # --- DYNAMISCHE VALIDATIE ---
                 st.write("---")
                 st.write("**Referentie T Validatie:**")
