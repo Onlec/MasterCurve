@@ -1,6 +1,12 @@
 import streamlit as st
 import pandas as pd
+from translations import get_translations
 
+# Altijd controleren of de taal er is
+if 'lang' not in st.session_state:
+    st.session_state.lang = 'EN'
+
+texts = get_translations().get(st.session_state.lang, get_translations()["EN"])
 # Pagina configuratie
 st.set_page_config(
     page_title="Data & Troubleshooting - RheoApp",

@@ -3,17 +3,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from translations import get_translations
-texts = get_translations()[st.session_state.lang]
 
-st.title(f"🧬 {texts['tab_therm']}")
+# Altijd controleren of de taal er is
+if 'lang' not in st.session_state:
+    st.session_state.lang = 'EN'
 
-# Gebruik de texts dictionary voor de tabs
-tab_tts, tab_therm, tab_struc, tab_calc = st.tabs([
-    texts["tab_tts"], 
-    texts["tab_therm"], 
-    texts["tab_struc"],
-    "🧮 Calculator"
-])
+texts = get_translations().get(st.session_state.lang, get_translations()["EN"])
 
 # Pagina configuratie
 st.set_page_config(
