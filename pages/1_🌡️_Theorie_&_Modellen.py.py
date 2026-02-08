@@ -2,6 +2,19 @@ import streamlit as st
 import numpy as np
 import matplotlib.pyplot as plt
 
+from translations import get_translations
+texts = get_translations()[st.session_state.lang]
+
+st.title(f"🧬 {texts['tab_therm']}")
+
+# Gebruik de texts dictionary voor de tabs
+tab_tts, tab_therm, tab_struc, tab_calc = st.tabs([
+    texts["tab_tts"], 
+    texts["tab_therm"], 
+    texts["tab_struc"],
+    "🧮 Calculator"
+])
+
 # Pagina configuratie
 st.set_page_config(
     page_title="Theorie & Modellen - RheoApp",
