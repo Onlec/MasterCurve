@@ -563,60 +563,83 @@ if uploaded_file:
         with tab8:
             st.header("📊 Expert Dashboard")
             
-            col_a, col_b, col_c = st.columns(3)
+            # --- KPI Quick-Look ---
+            col_a, col_b, col_c, col_d = st.columns(4)
             col_a.metric("Flow Activation (Ea)", f"{ea_final:.1f} kJ/mol")
-            
-            # De relaxatietijd uit de Cross-fit is vaak nauwkeuriger dan de crossover
-            if fit_success:
-                col_b.metric("Karakteristieke Tijd (τ)", f"{fit_params[1]:.3f} s", help="Gemiddelde relaxatietijd van de ketens")
-            else:
-                col_b.metric("Max Relaxatietijd", "N/A")
-                
+            col_b.metric("Zero Shear (η₀)", f"{eta0:.2e} Pa·s" if not np.isnan(eta0) else "N/A")
             col_c.metric("TTS Fit (R²)", f"{r2_final:.4f}")
-            
+            col_d.metric("Terminal Slope", f"{slope_term:.2f}" if not np.isnan(slope_term) else "N/A")
+
             st.divider()
-            
-            col_d, col_e = st.columns(2)
-            col_d.metric("Terminal G' Slope", f"{slope_term:.2f}" if not np.isnan(slope_term) else "N/A")
-            col_e.metric("Zero Shear (η₀)", f"{eta0:.2e} Pa·s" if not np.isnan(eta0) else "N/A")
 
-            # De Professor's Analyse
-            if not np.isnan(slope_term) and slope_term < 1.7:
-                st.error(f"⚠️ **Vloeiprobleem gedetecteerd!**")
-                st.write(f"De helling ({slope_term:.2f}) is te laag. Dit duidt op een 'yield stress' of onvolledig gesmolten domeinen. Het materiaal gedraagt zich als een elastische soep in plaats van een vloeistof.")
-            elif not np.isnan(slope_term):
-                st.success("✅ **Perfect Vloeigedrag.** De helling nadert 2.0 (Newtoniaans vloeien).")
-            st.subheader("Overzichtstabel")
-            st.table(summ_df)
+            # --- BLOK 1: TOTAAL OVERZICHT PARAMETERS ---
+            st.subheader("📋 1. Globale Rheologische Parameters")
             
+            # We bouwen een uitgebreide tabel met alle inzichten
+            dashboard_data = [
+                {"Categorie": "Thermisch", "Parameter": "Activatie Energie (Ea)", "Waarde": f"{ea_final:.2f}", "Eenheid": "kJ/mol", "Info": "Gevoeligheid voor T-veranderingen"},
+                {"Categorie": "Thermisch", "Parameter": "WLF C1 (Logat)", "Waarde": f"{wlf_c1:.2f}", "Eenheid": "-", "Info": "Vrije volume factor"},
+                {"Categorie": "Thermisch", "Parameter": "WLF C2", "Waarde": f"{wlf_c2:.2f}", "Eenheid": "K", "Info": "Afstand tot Tg"},
+                {"Categorie": "Viscositeit", "Parameter": "Zero Shear Viscosity (η₀)", "Waarde": f"{eta0:.2e}", "Eenheid": "Pa·s", "Info": "Maat voor Mw en processtabiliteit"},
+                {"Categorie": "Viscositeit", "Parameter": "Relaxatietijd (τ)", "Waarde": f"{fit_params[1]:.3f}" if fit_success else "N/A", "Eenheid": "s", "Info": "Gemiddelde keten-ontwarringstijd"},
+                {"Categorie": "Structuur", "Parameter": "Terminal Slope G'", "Waarde": f"{slope_term:.2f}", "Eenheid": "-", "Info": "Vloeigedrag (Ideaal = 2.0)"},
+                {"Categorie": "Structuur", "Parameter": "Plateau Modulus (Gₙ⁰)", "Waarde": f"{gn0:.2e}", "Eenheid": "Pa", "Info": "Maat voor netwerkdichtheid/entanglements"},
+                {"Categorie": "Validatie", "Parameter": "TTS Mastercurve Fit (R²)", "Waarde": f"{r2_final:.4f}", "Eenheid": "-", "Info": "Betrouwbaarheid van de verschuiving"}
+            ]
+            
+            summary_table_df = pd.DataFrame(dashboard_data)
+            st.table(summary_table_df)
+
+            # --- DE DIAGNOSE (Inzichten uit alle tabs) ---
+            st.subheader("🧠 2. Professor's Diagnose")
+            
+            diag_col1, diag_col2 = st.columns(2)
+            
+            with diag_col1:
+                st.markdown("**Verwerkingsadvies:**")
+                # Inzicht uit Terminal Slope & Eta0
+                if not np.isnan(slope_term) and slope_term < 1.7:
+                    st.error(f"⚠️ **Vloeiprobleem:** De lage slope ({slope_term:.2f}) duidt op onvolledige smelt of crosslinking. Pas op voor 'sharkskin' of inhomogeniteiten.")
+                else:
+                    st.success("✅ **Goede smeltkwaliteit:** Het materiaal vloeit Newtoniaans in de terminale zone.")
+                
+                # Inzicht uit Ea
+                if ea_final > 150:
+                    st.warning(f"🌡️ **Hoge T-gevoeligheid:** Kleine variaties in de extruder-T veroorzaken grote viscositeitsschommelingen.")
+
+            with diag_col2:
+                st.markdown("**Structurele Integriteit:**")
+                # Inzicht uit TTS fit
+                if r2_final < 0.95:
+                    st.error("❌ **Thermorheologisch Complex:** TTS fit is matig. Dit wijst op faseveranderingen tijdens de meting (bijv. kristallisatie van harde segmenten).")
+                else:
+                    st.success("✅ **Homogene Smelt:** Het materiaal volgt TTS perfect; stabiele fase-morfologie.")
+                
+                # Inzicht uit η₀
+                st.info(f"🧬 **Mw Indicatie:** De η₀ van {eta0:.1e} Pa·s is je referentiepunt. Lagere waarden bij volgende batches wijzen vaak op hydrolyse.")
+
+            st.divider()
+
+            # --- BLOK 2: CROSSOVER PUNTEN ---
+            st.subheader("⚖️ 3. Crossover Punten (Gel-Sol Overgang)")
             if not co_df.empty:
-                st.subheader("Crossover Punten & Relaxatie")
+                st.markdown("Deze punten markeren de overgang van elastisch (G' > G'') naar viskeus (G'' > G') gedrag per temperatuur.")
                 st.dataframe(co_df, use_container_width=True)
+            else:
+                st.warning("Geen crossover punten gedetecteerd. Materiaal blijft mogelijk dominant elastisch of viskeus in dit bereik.")
 
-            st.subheader("Overzichtstabel")
-            summ_df = pd.DataFrame([
-                {'Parameter': 'Activatie Energie (Ea)', 'Waarde': f"{ea_final:.1f}", 'Eenheid': 'kJ/mol'},
-                {'Parameter': 'Zero Shear Viscosity (η₀)', 'Value': f"{eta0:.2e}", 'Eenheid': 'Pa·s'},
-                {'Parameter': 'Terminal Slope (δ > 75°)', 'Value': f"{slope_term:.2f}", 'Eenheid': '-'},
-                {'Parameter': 'Plateau Modulus (Gₙ⁰)', 'Value': f"{gn0:.2e}", 'Eenheid': 'Pa'}
-            ])
-            st.table(summ_df)
-            
-            if not co_df.empty:
-                st.subheader("Gevonden Crossover Punten")
-                st.dataframe(co_df, use_container_width=True)
-
-            # Excel Download
+            # --- EXCEL EXPORT ---
+            # We maken een schone export van de dashboard tabel
             shift_export_df = pd.DataFrame({
                 'Temperatuur_C': selected_temps,
                 'log_aT': [st.session_state.shifts[t] for t in selected_temps]
             })
             
-            excel_data = to_excel(summ_df, shift_export_df, co_df)
+            excel_data = to_excel(summary_table_df, shift_export_df, co_df)
             st.download_button(
                 label="📥 Download Geformatteerd Excel Rapport",
                 data=excel_data,
-                file_name=f"RheoApp_{sample_name}_{int(ref_temp)}C.xlsx",
+                file_name=f"RheoReport_{sample_name}.xlsx",
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             )
     else:
