@@ -496,29 +496,45 @@ if uploaded_file:
                 st.pyplot(fig_t)
 
             with col_t2:
-                # Metrics
                 st.metric("Ea (Arrhenius)", f"{ea_final:.1f} kJ/mol")
                 
-                # De nieuwe Softening Point indicator
-                st.metric("Estimated Softening Point", f"{t_softening:.1f} °C", 
-                          help="De temperatuur waarbij het materiaal transformeert van rubber-gedrag naar smelt-gedrag.")
+                # De Softening Point metric
+                st.metric("Estimated Softening Point", f"{t_softening:.1f} °C")
                 
-                if r2_final < 0.95:
-                    st.error(f"⚠️ **Advies:** Lage Arrhenius R² ({r2_final:.3f}). Het materiaal is waarschijnlijk nog in de verwekingsfase.")
+                # --- DYNAMISCHE VALIDATIE ---
+                st.write("---")
+                st.write("**Referentie T Validatie:**")
+                
+                # Check 1: Ligt de referentietemperatuur in het veilige gebied?
+                if ref_temp < t_softening:
+                    st.error(f"⚠️ **Kritieke Waarschuwing:** Je referentietemperatuur ({ref_temp}°C) ligt **onder** het softening point ({t_softening:.1f}°C).")
+                    st.markdown("""
+                        <p style='color: #ff4b4b; font-size: 0.9em;'>
+                        In dit gebied zijn de harde segmenten nog niet volledig gesmolten. 
+                        De <b>Master Curve</b> die je nu ziet is een wiskundige benadering, 
+                        maar fysisch niet 100% correct (thermorheologisch complex).
+                        </p>
+                    """, unsafe_allow_html=True)
+                    st.info("💡 **Advies:** Kies een hogere referentietemperatuur (bijv. de hoogste meting) voor een betrouwbaardere shift.")
                 else:
-                    st.success(f"✅ Stabiele smelt gedetecteerd boven {t_softening:.0f}°C.")
+                    st.success(f"✅ **Referentie T is stabiel:** Je bouwt de Master Curve vanuit de homogene smeltfase ({ref_temp}°C > {t_softening:.1f}°C).")
+
+                # Check 2: Betrouwbaarheid van de fit
+                if r2_final > 0.98:
+                    st.success(f"📈 Uitstekende Arrhenius fit (R²={r2_final:.3f})")
+                elif r2_final < 0.90:
+                    st.warning(f"📉 Zwakke fit (R²={r2_final:.3f}). De shift-factors volgen geen standaard thermisch model.")
 
                 with st.expander("🔬 Model Parameters"):
                     st.write(f"**VFT T₀ (Vogel):** {popt_vft[2]-273.15:.1f} °C" if vft_success else "VFT: N/A")
-                    st.write(f"**WLF C1/C2:** {wlf_c1:.1f} / {wlf_c2:.1f}")
+                    st.write(f"**WLF C1 / C2:** {wlf_c1:.1f} / {wlf_c2:.1f}")
 
                 st.markdown(f"""
-                <div class="expert-note">
-                <b>Professor's Diagnose:</b><br>
-                Bij <b>{t_softening:.1f}°C</b> kruisen de twee regimes elkaar. 
-                Beneden deze temperatuur domineren de fysieke crosslinks (harde segmenten). 
-                Daarboven gedraagt de TPU zich als een vloeistof. Gebruik Arrhenius-data alleen 
-                voor temperaturen die ruim boven dit punt liggen.
+                <div style="background-color: #f0f2f6; padding: 15px; border-radius: 10px; border-left: 5px solid #ffa500;">
+                <b>Professor's Eindoordeel:</b><br>
+                De overgang bij <b>{t_softening:.1f}°C</b> bepaalt de wetten van je TPU. 
+                Bij lagere temperaturen "vechten" de harde segmenten tegen de vloei, wat de WLF-curve doet afwijken. 
+                Bij hogere temperaturen wint de entropie en regeert Arrhenius.
                 </div>
                 """, unsafe_allow_html=True)
         with tab5:
