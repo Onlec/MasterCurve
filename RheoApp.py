@@ -274,12 +274,15 @@ if uploaded_file:
             d = df[df['T_group'] == t].copy()
             at = 10**st.session_state.shifts[t]
             d['w_s'] = d['omega'] * at
-            # Bereken complexe viscositeit: eta* = |G*| / omega
             d['eta_s'] = np.sqrt(d['Gp']**2 + d['Gpp']**2) / d['w_s']
+            
+            # --- TOEGEVOEGD: Bereken delta (fasehoek) voor de Terminal Slope check ---
+            d['delta'] = np.degrees(np.arctan2(d['Gpp'], d['Gp']))
             m_list.append(d)
         
         # Maak één centrale mastercurve dataframe
         m_df = pd.concat(m_list).sort_values('w_s')
+        
 
         # --- 2. BEREKEN METRICS (Eén keer uitvoeren) ---
         eta0, gn0, fit_params, fit_success = calculate_rheo_metrics(m_df)
@@ -602,7 +605,7 @@ if uploaded_file:
             if not co_df.empty:
                 st.subheader("Gevonden Crossover Punten")
                 st.dataframe(co_df, use_container_width=True)
-                
+
             # Excel Download
             shift_export_df = pd.DataFrame({
                 'Temperatuur_C': selected_temps,
