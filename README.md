@@ -1,4 +1,4 @@
-﻿# RheoApp - TPU Rheology Expert Tool
+﻿# RheoApp - Master Curve and analysis Tool
 
 > *"Rheologie is 50% meten en 50% gezond verstand."*
 
@@ -1537,21 +1537,70 @@ Alle tabs geladen: ~300 MB totaal
 
 ---
 
+## ⚠️ BELANGRIJKE DISCLAIMER
+
+**Ontwikkelingsproces:**
+Deze tool is ontwikkeld tijdens een weekend "vibe coding" sessie met behulp van AI-assistenten (Claude.ai en Gemini). Het is een **proof-of-concept** en **geen gevalideerd commercieel product**.
+
+**Geen Garanties:**
+- ❌ De maker kan **NIET instaan voor de correctheid** van berekeningen
+- ❌ Er is **GEEN formele validatie** uitgevoerd tegen industriestandaarden
+- ❌ De tool is **NIET bedoeld voor kritische beslissingen** zonder onafhankelijke verificatie
+- ❌ Gebruikers zijn **zelf verantwoordelijk** voor validatie van resultaten
+
+**Gebruik op Eigen Risico:**
+```
+⚠️ CONTROLEER ALTIJD DE RESULTATEN MET:
+   - Handberekeningen op testdata
+   - Vergelijking met gevalideerde commerciële software
+   - Expert review van gevonden parameters
+   - Fysische validatie (bijv. viscositeitsmetingen bij specifieke T)
+```
+
+**Bekende Beperkingen:**
+- Geen error propagation analysis
+- Geen uncertainty quantification
+- Beperkte input validatie
+- Geen unit testing framework
+- Geen peer-review van algoritmes
+
+**Aanbevolen Gebruik:**
+```
+✅ Exploratory data analysis
+✅ Snelle eerste beoordeling van TTS geldigheid  
+✅ Educatieve doeleinden
+✅ Basis voor verdere ontwikkeling
+❌ Production quality control
+❌ Regulatoire documentatie
+❌ Kritische productontwikkeling
+```
+
+**Disclaimer Tekst voor Rapporten:**
+```
+"Analyse uitgevoerd met open-source tool RheoApp (v1.0.0, niet-gevalideerd).
+Resultaten zijn indicatief en dienen geverifieerd te worden met gevalideerde
+methoden voorafgaand aan gebruik in kritische beslissingen."
+```
+
+---
+
 ## 🔐 Licentie & Gebruik
 
 **Ontwikkeld voor:** TPU Rheologie Analyse  
-**Versie:** 1.0.0  
-**Laatst bijgewerkt:** 2024-02-08  
+**Versie:** 1.0.0 (Alpha - Experimenteel)  
+**Laatst bijgewerkt:** 2026-02-08  
+**Ontwikkeld met:** Claude.ai & Gemini (AI-assisted coding)  
 
 **Gebruik:**
-Deze tool is ontwikkeld voor wetenschappelijk en industrieel gebruik. Voor publicaties die gebruik maken van deze tool, wordt gevraagd te refereren aan de onderliggende wetenschappelijke principes (zie Referenties sectie).
+Deze tool is ontwikkeld voor wetenschappelijk en industrieel **experimenteel** gebruik. Voor publicaties die gebruik maken van deze tool, wordt gevraagd te refereren aan de onderliggende wetenschappelijke principes (zie Referenties sectie) en de experimentele aard van de software te vermelden.
 
-**Disclaimer:**
+**Data Kwaliteit Checklist:**
 De resultaten van deze tool zijn zo betrouwbaar als de input data. Controleer altijd:
-- Lineariteit van de meting (LVE regime)
-- Thermische equilibratie
-- Sample integriteit (geen degradatie)
-- Instrumentcalibratie
+- ✅ Lineariteit van de meting (LVE regime)
+- ✅ Thermische equilibratie (5+ min wachttijd per T)
+- ✅ Sample integriteit (geen degradatie, oxidatie, vocht)
+- ✅ Instrumentcalibratie (recent, binnen spec)
+- ✅ Reproduceerbaarheid (minimaal duplicaat metingen)
 
 ---
 
