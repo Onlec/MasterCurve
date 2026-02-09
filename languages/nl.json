@@ -41,7 +41,19 @@
       "model_comparison_intro": "Verschillende temperatuurmodellen voorspellen verschillende shift factor trends:",
       "model_arrhenius": "Arrhenius (Simpel)",
       "model_wlf": "WLF (Rubber)",
-      "model_vft": "VFT (Hybride)"
+      "model_vft": "VFT (Hybride)",
+      "model_comparison_params_label": "**Vergelijk de modellen:**",
+      "model_comparison_tref_label": "T_ref (°C)",
+      "model_comparison_ea_label": "Ea (kJ/mol) [Arrhenius]",
+      "model_comparison_c1_label": "WLF C₁",
+      "model_comparison_c2_label": "WLF C₂ (K)",
+      "model_comparison_adjust_tip": "💡 Pas parameters aan om het effect te zien!",
+      "model_comparison_plot_title": "Model Vergelijking: Arrhenius vs WLF",
+      "model_comparison_x_label": "Temperatuur (°C)",
+      "model_comparison_y_label": "log(aT)",
+      "model_comparison_ref_line": "T_ref = {tref}°C",
+      "model_comparison_annotation": "Bij T_ref = {tref}°C: log(aT) = 0",
+      "model_comparison_interpretation": "**Interpretatie:**\n- **Arrhenius** (rood): Lineair verband, simpel model\n- **WLF** (blauw): Gebogen verloop, beter voor polymeren nabij Tg\n- Bij T_ref kruisen beide modellen (log(aT) = 0)\n- Verschil tussen modellen groter bij lage/hoge T"
     },
     "thermal": {
       "header": "Thermische Shift Factor Modellen",

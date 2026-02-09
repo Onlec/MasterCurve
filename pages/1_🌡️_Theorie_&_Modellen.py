@@ -172,15 +172,102 @@ with tab_tts:
     st.code(tts.get("decision_tree", "```\nStart hier\n...\n```"), language='text')
     
     st.divider()
+
+# Model comparison - INTERACTIVE
+st.subheader(tts.get("model_comparison_title", "📈 Model Vergelijking"))
+st.markdown(tts.get("model_comparison_intro", "Verschillende temperatuurmodellen..."))
+
+# Interactive comparison plot
+comp_col1, comp_col2 = st.columns([2, 1])
+
+with comp_col2:
+    st.markdown(tts.get("model_comparison_params_label", "**Vergelijk de modellen:**"))
     
-    # Model comparison
-    st.subheader(tts.get("model_comparison_title", "📈 Model Vergelijking"))
-    st.markdown(tts.get("model_comparison_intro", "Verschillende temperatuurmodellen..."))
+    # Model parameters - interactive sliders
+    T_ref_comp = st.number_input(
+        tts.get("model_comparison_tref_label", "T_ref (°C)"),
+        value=200, step=10, key="comp_tref"
+    )
     
-    # Simple comparison plot (placeholder)
-    st.caption("💡 " + tts.get("model_arrhenius", "Arrhenius") + " vs " + 
-               tts.get("model_wlf", "WLF") + " vs " + 
-               tts.get("model_vft", "VFT"))
+    Ea_comp = st.number_input(
+        tts.get("model_comparison_ea_label", "Ea (kJ/mol) [Arrhenius]"),
+        value=100, min_value=50, max_value=150, step=10, key="comp_ea"
+    )
+    
+    C1_comp = st.number_input(
+        tts.get("model_comparison_c1_label", "WLF C₁"),
+        value=10.0, min_value=5.0, max_value=20.0, step=0.5, key="comp_c1"
+    )
+    
+    C2_comp = st.number_input(
+        tts.get("model_comparison_c2_label", "WLF C₂ (K)"),
+        value=50, min_value=30, max_value=80, step=5, key="comp_c2"
+    )
+    
+    st.caption(tts.get("model_comparison_adjust_tip", "💡 Pas parameters aan om het effect te zien!"))
+
+with comp_col1:
+    # Temperature range for comparison
+    T_range = np.linspace(150, 230, 50)  # 150-230°C
+    T_ref_K = T_ref_comp + 273.15
+    R = 8.314  # J/mol·K
+    
+    # Calculate shift factors for each model
+    log_aT_arrhenius = []
+    log_aT_wlf = []
+    
+    for T in T_range:
+        T_K = T + 273.15
+        
+        # Arrhenius model
+        log_aT_arr = (Ea_comp * 1000 / R) * (1/T_K - 1/T_ref_K) / 2.303
+        log_aT_arrhenius.append(log_aT_arr)
+        
+        # WLF model
+        log_aT_w = (-C1_comp * (T - T_ref_comp)) / (C2_comp + (T - T_ref_comp))
+        log_aT_wlf.append(log_aT_w)
+    
+    # Create comparison plot
+    fig, ax = plt.subplots(figsize=(8, 5))
+    
+    # Plot both models
+    ax.plot(T_range, log_aT_arrhenius, 'r-', linewidth=2.5, 
+            label=tts.get("model_arrhenius", "Arrhenius"))
+    ax.plot(T_range, log_aT_wlf, 'b-', linewidth=2.5, 
+            label=tts.get("model_wlf", "WLF"))
+    
+    # Mark reference temperature
+    ax.axvline(T_ref_comp, color='gray', linestyle='--', alpha=0.5, 
+               label=tts.get("model_comparison_ref_line", "T_ref = {tref}°C").format(tref=T_ref_comp))
+    ax.axhline(0, color='gray', linestyle='--', alpha=0.3)
+    
+    # Labels and styling
+    ax.set_xlabel(tts.get("model_comparison_x_label", "Temperatuur (°C)"), 
+                  fontsize=12, fontweight='bold')
+    ax.set_ylabel(tts.get("model_comparison_y_label", "log(aT)"), 
+                  fontsize=12, fontweight='bold')
+    ax.set_title(tts.get("model_comparison_plot_title", "Model Vergelijking: Arrhenius vs WLF"), 
+                 fontsize=14, fontweight='bold')
+    ax.legend(loc='best')
+    ax.grid(True, alpha=0.3)
+    
+    # Add annotation
+    annotation_text = tts.get("model_comparison_annotation", 
+                               "Bij T_ref = {tref}°C: log(aT) = 0").format(tref=T_ref_comp)
+    ax.text(0.02, 0.98, annotation_text,
+            transform=ax.transAxes, fontsize=9,
+            verticalalignment='top',
+            bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.3))
+    
+    st.pyplot(fig)
+    plt.close()
+    
+    # Explanation below plot
+    st.caption(tts.get("model_comparison_interpretation", """**Interpretatie:**
+- **Arrhenius** (rood): Lineair verband, simpel model
+- **WLF** (blauw): Gebogen verloop, beter voor polymeren nabij Tg
+- Bij T_ref kruisen beide modellen (log(aT) = 0)
+- Verschil tussen modellen groter bij lage/hoge T"""))
 
 # ============================================================================
 # TAB 2: THERMAL MODELS
