@@ -97,252 +97,252 @@ with tab_tts:
     
     st.divider()
 
-# Interactive Demo - IMPROVED VERSION
-st.subheader(tts.get("demo_title", "📊 Interactieve TTS Demonstratie"))
+    # Interactive Demo - IMPROVED VERSION
+    st.subheader(tts.get("demo_title", "📊 Interactieve TTS Demonstratie"))
 
-demo_col1, demo_col2 = st.columns([2, 1])
+    demo_col1, demo_col2 = st.columns([2, 1])
 
-with demo_col2:
-    st.markdown(tts.get("demo_params_label", "**Speel met de parameters:**"))
-    
-    # Reference temperature
-    ref_temp = st.slider(
-        tts.get("demo_ref_temp", "Referentie Temperatuur (°C)"),
-        min_value=150, max_value=250, value=200, step=10,
-        help=tts.get("demo_tref_info", "Dit is je 'anker' temperatuur")
-    )
-    
-    # Test temperature (lower than reference)
-    test_temp = st.slider(
-        tts.get("demo_test_temp", "Test Temperatuur (°C)"),
-        min_value=150, max_value=250, value=170, step=10
-    )
-    
-    # Activation energy
-    ea = st.slider(
-        tts.get("demo_ea", "Activatie Energie Ea (kJ/mol)"),
-        min_value=40, max_value=150, value=100, step=5
-    )
-    
-    # Show/hide shifted data toggle
-    show_shifted = st.checkbox(
-        "✨ Toon TTS Effect (shift de data)", 
-        value=False,
-        help="Schakel tussen ruwe data en TTS-gecorrigeerde data"
-    )
-    
-    # Calculate shift factor (Arrhenius)
-    R = 8.314  # J/mol·K
-    T_ref_K = ref_temp + 273.15
-    T_test_K = test_temp + 273.15
-    
-    log_aT = (ea * 1000 / R) * (1/T_test_K - 1/T_ref_K) / 2.303
-    aT = 10**log_aT
-    
-    st.markdown("---")
-    st.markdown(tts.get("demo_shift_result", "**📌 Resultaat:**").format(test_temp=test_temp))
-    st.code(tts.get("demo_shift_formula", "log(aT) = {log_at:.3f}  →  aT = {at:.4f}").format(
-        log_at=log_aT, at=aT
-    ))
-    
-    if show_shifted:
-        st.success("✅ TTS Toegepast!\nData is verschoven met aT={:.3f}".format(aT))
-    else:
-        st.info("ℹ️ Ruwe data (geen TTS)\nData bij verschillende T liggen niet op elkaar")
+    with demo_col2:
+        st.markdown(tts.get("demo_params_label", "**Speel met de parameters:**"))
+        
+        # Reference temperature
+        ref_temp = st.slider(
+            tts.get("demo_ref_temp", "Referentie Temperatuur (°C)"),
+            min_value=150, max_value=250, value=200, step=10,
+            help=tts.get("demo_tref_info", "Dit is je 'anker' temperatuur")
+        )
+        
+        # Test temperature (lower than reference)
+        test_temp = st.slider(
+            tts.get("demo_test_temp", "Test Temperatuur (°C)"),
+            min_value=150, max_value=250, value=170, step=10
+        )
+        
+        # Activation energy
+        ea = st.slider(
+            tts.get("demo_ea", "Activatie Energie Ea (kJ/mol)"),
+            min_value=40, max_value=150, value=100, step=5
+        )
+        
+        # Show/hide shifted data toggle
+        show_shifted = st.checkbox(
+            "✨ Toon TTS Effect (shift de data)", 
+            value=False,
+            help="Schakel tussen ruwe data en TTS-gecorrigeerde data"
+        )
+        
+        # Calculate shift factor (Arrhenius)
+        R = 8.314  # J/mol·K
+        T_ref_K = ref_temp + 273.15
+        T_test_K = test_temp + 273.15
+        
+        log_aT = (ea * 1000 / R) * (1/T_test_K - 1/T_ref_K) / 2.303
+        aT = 10**log_aT
+        
+        st.markdown("---")
+        st.markdown(tts.get("demo_shift_result", "**📌 Resultaat:**").format(test_temp=test_temp))
+        st.code(tts.get("demo_shift_formula", "log(aT) = {log_at:.3f}  →  aT = {at:.4f}").format(
+            log_at=log_aT, at=aT
+        ))
+        
+        if show_shifted:
+            st.success("✅ TTS Toegepast!\nData is verschoven met aT={:.3f}".format(aT))
+        else:
+            st.info("ℹ️ Ruwe data (geen TTS)\nData bij verschillende T liggen niet op elkaar")
 
-with demo_col1:
-    # Create realistic TPU-like data
-    omega = np.logspace(-2, 2, 30)  # 0.01 to 100 rad/s
-    
-    # Model parameters for TPU-like behavior
-    # G_N0 = plateau modulus, tau = relaxation time
-    G_N0_ref = 3e5  # Pa
-    tau_ref = 1.0   # s (at reference T)
-    
-    # At reference temperature
-    G_prime_ref = G_N0_ref * (omega * tau_ref)**2 / (1 + (omega * tau_ref)**2)
-    G_double_ref = G_N0_ref * (omega * tau_ref) / (1 + (omega * tau_ref)**2)
-    
-    # At test temperature (WITHOUT shift)
-    # Lower T means slower relaxation → longer tau
-    tau_test = tau_ref * aT  # Key insight: tau changes with T!
-    G_prime_test = G_N0_ref * (omega * tau_test)**2 / (1 + (omega * tau_test)**2)
-    G_double_test = G_N0_ref * (omega * tau_test) / (1 + (omega * tau_test)**2)
-    
-    # Create plot
-    fig, ax = plt.subplots(figsize=(8, 5))
-    
-    # Always show reference temperature data
-    ax.loglog(omega, G_prime_ref, 'k-', linewidth=2.5, 
-              label=f"G' @ {ref_temp}°C (ref)", zorder=3)
-    ax.loglog(omega, G_double_ref, 'k--', linewidth=2.5, alpha=0.7,
-              label=f"G'' @ {ref_temp}°C (ref)", zorder=3)
-    
-    if show_shifted:
-        # SHIFTED data - apply TTS correction
-        omega_shifted = omega * aT  # This is the TTS magic!
-        ax.loglog(omega_shifted, G_prime_test, 'b-', linewidth=2.5, 
-                  label=f"G' @ {test_temp}°C (shifted)", zorder=2)
-        ax.loglog(omega_shifted, G_double_test, 'b--', linewidth=2.5, alpha=0.7,
-                  label=f"G'' @ {test_temp}°C (shifted)", zorder=2)
+    with demo_col1:
+        # Create realistic TPU-like data
+        omega = np.logspace(-2, 2, 30)  # 0.01 to 100 rad/s
+        
+        # Model parameters for TPU-like behavior
+        # G_N0 = plateau modulus, tau = relaxation time
+        G_N0_ref = 3e5  # Pa
+        tau_ref = 1.0   # s (at reference T)
+        
+        # At reference temperature
+        G_prime_ref = G_N0_ref * (omega * tau_ref)**2 / (1 + (omega * tau_ref)**2)
+        G_double_ref = G_N0_ref * (omega * tau_ref) / (1 + (omega * tau_ref)**2)
+        
+        # At test temperature (WITHOUT shift)
+        # Lower T means slower relaxation → longer tau
+        tau_test = tau_ref * aT  # Key insight: tau changes with T!
+        G_prime_test = G_N0_ref * (omega * tau_test)**2 / (1 + (omega * tau_test)**2)
+        G_double_test = G_N0_ref * (omega * tau_test) / (1 + (omega * tau_test)**2)
+        
+        # Create plot
+        fig, ax = plt.subplots(figsize=(8, 5))
+        
+        # Always show reference temperature data
+        ax.loglog(omega, G_prime_ref, 'k-', linewidth=2.5, 
+                label=f"G' @ {ref_temp}°C (ref)", zorder=3)
+        ax.loglog(omega, G_double_ref, 'k--', linewidth=2.5, alpha=0.7,
+                label=f"G'' @ {ref_temp}°C (ref)", zorder=3)
+        
+        if show_shifted:
+            # SHIFTED data - apply TTS correction
+            omega_shifted = omega * aT  # This is the TTS magic!
+            ax.loglog(omega_shifted, G_prime_test, 'b-', linewidth=2.5, 
+                    label=f"G' @ {test_temp}°C (shifted)", zorder=2)
+            ax.loglog(omega_shifted, G_double_test, 'b--', linewidth=2.5, alpha=0.7,
+                    label=f"G'' @ {test_temp}°C (shifted)", zorder=2)
+            
+            # Add annotation
+            ax.text(0.05, 0.95, 
+                    "✨ TTS toegepast!\nCurves vallen samen",
+                    transform=ax.transAxes,
+                    fontsize=11, fontweight='bold',
+                    verticalalignment='top',
+                    bbox=dict(boxstyle='round', facecolor='lightgreen', alpha=0.7))
+        else:
+            # UNSHIFTED data - show the problem
+            ax.loglog(omega, G_prime_test, 'r-', linewidth=2.5, 
+                    label=f"G' @ {test_temp}°C (ruw)", zorder=2)
+            ax.loglog(omega, G_double_test, 'r--', linewidth=2.5, alpha=0.7,
+                    label=f"G'' @ {test_temp}°C (ruw)", zorder=2)
+            
+            # Add annotation showing the gap
+            ax.text(0.05, 0.95, 
+                    f"❌ Zonder TTS!\nData bij {test_temp}°C ligt links\n(trager relaxatie)",
+                    transform=ax.transAxes,
+                    fontsize=11, fontweight='bold',
+                    verticalalignment='top',
+                    bbox=dict(boxstyle='round', facecolor='lightsalmon', alpha=0.7))
+        
+        # Styling
+        ax.set_xlabel(tts.get("demo_x_label", "ω (rad/s)"), 
+                    fontsize=12, fontweight='bold')
+        ax.set_ylabel("G', G'' (Pa)", fontsize=12, fontweight='bold')
+        
+        if show_shifted:
+            title = "✅ Met TTS: Master Curve (data op elkaar!)"
+        else:
+            title = "❌ Zonder TTS: Data bij verschillende T"
+        ax.set_title(title, fontsize=14, fontweight='bold')
+        
+        ax.legend(loc='lower right', fontsize=9)
+        ax.grid(True, alpha=0.3, which='both')
+        ax.set_ylim([1e3, 1e6])
+        
+        st.pyplot(fig)
+        plt.close()
+        
+        # Educational caption
+        if show_shifted:
+            st.caption("""
+            ✅ **Met TTS (shift factor toegepast):**
+            - Data bij {test_temp}°C is verschoven naar rechts (×{at:.2f})
+            - Beide temperaturen vallen nu op dezelfde curve
+            - Dit bewijst dat het materiaal thermorheologisch simpel is!
+            """.format(test_temp=test_temp, at=aT))
+        else:
+            st.caption("""
+            ❌ **Zonder TTS (ruwe data):**
+            - Data bij {test_temp}°C ligt LINKS van {ref_temp}°C
+            - Lagere T → langzamere moleculaire beweging → curve verschuift naar lage ω
+            - De curves liggen NIET op elkaar → we hebben TTS nodig!
+            """.format(test_temp=test_temp, ref_temp=ref_temp))
+        
+        # Decision tree
+        st.subheader(tts.get("decision_tree_title", "🌳 TTS Validatie Decision Tree"))
+        st.code(tts.get("decision_tree", "```\nStart hier\n...\n```"), language='text')
+        
+        st.divider()
+
+    # Model comparison - INTERACTIVE
+    st.subheader(tts.get("model_comparison_title", "📈 Model Vergelijking"))
+    st.markdown(tts.get("model_comparison_intro", "Verschillende temperatuurmodellen..."))
+
+    # Interactive comparison plot
+    comp_col1, comp_col2 = st.columns([2, 1])
+
+    with comp_col2:
+        st.markdown(tts.get("model_comparison_params_label", "**Vergelijk de modellen:**"))
+        
+        # Model parameters - interactive sliders
+        T_ref_comp = st.number_input(
+            tts.get("model_comparison_tref_label", "T_ref (°C)"),
+            value=200, step=10, key="comp_tref"
+        )
+        
+        Ea_comp = st.number_input(
+            tts.get("model_comparison_ea_label", "Ea (kJ/mol) [Arrhenius]"),
+            value=100, min_value=50, max_value=150, step=10, key="comp_ea"
+        )
+        
+        C1_comp = st.number_input(
+            tts.get("model_comparison_c1_label", "WLF C₁"),
+            value=10.0, min_value=5.0, max_value=20.0, step=0.5, key="comp_c1"
+        )
+        
+        C2_comp = st.number_input(
+            tts.get("model_comparison_c2_label", "WLF C₂ (K)"),
+            value=50, min_value=30, max_value=80, step=5, key="comp_c2"
+        )
+        
+        st.caption(tts.get("model_comparison_adjust_tip", "💡 Pas parameters aan om het effect te zien!"))
+
+    with comp_col1:
+        # Temperature range for comparison
+        T_range = np.linspace(150, 230, 50)  # 150-230°C
+        T_ref_K = T_ref_comp + 273.15
+        R = 8.314  # J/mol·K
+        
+        # Calculate shift factors for each model
+        log_aT_arrhenius = []
+        log_aT_wlf = []
+        
+        for T in T_range:
+            T_K = T + 273.15
+            
+            # Arrhenius model
+            log_aT_arr = (Ea_comp * 1000 / R) * (1/T_K - 1/T_ref_K) / 2.303
+            log_aT_arrhenius.append(log_aT_arr)
+            
+            # WLF model
+            log_aT_w = (-C1_comp * (T - T_ref_comp)) / (C2_comp + (T - T_ref_comp))
+            log_aT_wlf.append(log_aT_w)
+        
+        # Create comparison plot
+        fig, ax = plt.subplots(figsize=(8, 5))
+        
+        # Plot both models
+        ax.plot(T_range, log_aT_arrhenius, 'r-', linewidth=2.5, 
+                label=tts.get("model_arrhenius", "Arrhenius"))
+        ax.plot(T_range, log_aT_wlf, 'b-', linewidth=2.5, 
+                label=tts.get("model_wlf", "WLF"))
+        
+        # Mark reference temperature
+        ax.axvline(T_ref_comp, color='gray', linestyle='--', alpha=0.5, 
+                label=tts.get("model_comparison_ref_line", "T_ref = {tref}°C").format(tref=T_ref_comp))
+        ax.axhline(0, color='gray', linestyle='--', alpha=0.3)
+        
+        # Labels and styling
+        ax.set_xlabel(tts.get("model_comparison_x_label", "Temperatuur (°C)"), 
+                    fontsize=12, fontweight='bold')
+        ax.set_ylabel(tts.get("model_comparison_y_label", "log(aT)"), 
+                    fontsize=12, fontweight='bold')
+        ax.set_title(tts.get("model_comparison_plot_title", "Model Vergelijking: Arrhenius vs WLF"), 
+                    fontsize=14, fontweight='bold')
+        ax.legend(loc='best')
+        ax.grid(True, alpha=0.3)
         
         # Add annotation
-        ax.text(0.05, 0.95, 
-                "✨ TTS toegepast!\nCurves vallen samen",
-                transform=ax.transAxes,
-                fontsize=11, fontweight='bold',
+        annotation_text = tts.get("model_comparison_annotation", 
+                                "Bij T_ref = {tref}°C: log(aT) = 0").format(tref=T_ref_comp)
+        ax.text(0.02, 0.98, annotation_text,
+                transform=ax.transAxes, fontsize=9,
                 verticalalignment='top',
-                bbox=dict(boxstyle='round', facecolor='lightgreen', alpha=0.7))
-    else:
-        # UNSHIFTED data - show the problem
-        ax.loglog(omega, G_prime_test, 'r-', linewidth=2.5, 
-                  label=f"G' @ {test_temp}°C (ruw)", zorder=2)
-        ax.loglog(omega, G_double_test, 'r--', linewidth=2.5, alpha=0.7,
-                  label=f"G'' @ {test_temp}°C (ruw)", zorder=2)
+                bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.3))
         
-        # Add annotation showing the gap
-        ax.text(0.05, 0.95, 
-                f"❌ Zonder TTS!\nData bij {test_temp}°C ligt links\n(trager relaxatie)",
-                transform=ax.transAxes,
-                fontsize=11, fontweight='bold',
-                verticalalignment='top',
-                bbox=dict(boxstyle='round', facecolor='lightsalmon', alpha=0.7))
-    
-    # Styling
-    ax.set_xlabel(tts.get("demo_x_label", "ω (rad/s)"), 
-                  fontsize=12, fontweight='bold')
-    ax.set_ylabel("G', G'' (Pa)", fontsize=12, fontweight='bold')
-    
-    if show_shifted:
-        title = "✅ Met TTS: Master Curve (data op elkaar!)"
-    else:
-        title = "❌ Zonder TTS: Data bij verschillende T"
-    ax.set_title(title, fontsize=14, fontweight='bold')
-    
-    ax.legend(loc='lower right', fontsize=9)
-    ax.grid(True, alpha=0.3, which='both')
-    ax.set_ylim([1e3, 1e6])
-    
-    st.pyplot(fig)
-    plt.close()
-    
-    # Educational caption
-    if show_shifted:
-        st.caption("""
-        ✅ **Met TTS (shift factor toegepast):**
-        - Data bij {test_temp}°C is verschoven naar rechts (×{at:.2f})
-        - Beide temperaturen vallen nu op dezelfde curve
-        - Dit bewijst dat het materiaal thermorheologisch simpel is!
-        """.format(test_temp=test_temp, at=aT))
-    else:
-        st.caption("""
-        ❌ **Zonder TTS (ruwe data):**
-        - Data bij {test_temp}°C ligt LINKS van {ref_temp}°C
-        - Lagere T → langzamere moleculaire beweging → curve verschuift naar lage ω
-        - De curves liggen NIET op elkaar → we hebben TTS nodig!
-        """.format(test_temp=test_temp, ref_temp=ref_temp))
-    
-    # Decision tree
-    st.subheader(tts.get("decision_tree_title", "🌳 TTS Validatie Decision Tree"))
-    st.code(tts.get("decision_tree", "```\nStart hier\n...\n```"), language='text')
-    
-    st.divider()
-
-# Model comparison - INTERACTIVE
-st.subheader(tts.get("model_comparison_title", "📈 Model Vergelijking"))
-st.markdown(tts.get("model_comparison_intro", "Verschillende temperatuurmodellen..."))
-
-# Interactive comparison plot
-comp_col1, comp_col2 = st.columns([2, 1])
-
-with comp_col2:
-    st.markdown(tts.get("model_comparison_params_label", "**Vergelijk de modellen:**"))
-    
-    # Model parameters - interactive sliders
-    T_ref_comp = st.number_input(
-        tts.get("model_comparison_tref_label", "T_ref (°C)"),
-        value=200, step=10, key="comp_tref"
-    )
-    
-    Ea_comp = st.number_input(
-        tts.get("model_comparison_ea_label", "Ea (kJ/mol) [Arrhenius]"),
-        value=100, min_value=50, max_value=150, step=10, key="comp_ea"
-    )
-    
-    C1_comp = st.number_input(
-        tts.get("model_comparison_c1_label", "WLF C₁"),
-        value=10.0, min_value=5.0, max_value=20.0, step=0.5, key="comp_c1"
-    )
-    
-    C2_comp = st.number_input(
-        tts.get("model_comparison_c2_label", "WLF C₂ (K)"),
-        value=50, min_value=30, max_value=80, step=5, key="comp_c2"
-    )
-    
-    st.caption(tts.get("model_comparison_adjust_tip", "💡 Pas parameters aan om het effect te zien!"))
-
-with comp_col1:
-    # Temperature range for comparison
-    T_range = np.linspace(150, 230, 50)  # 150-230°C
-    T_ref_K = T_ref_comp + 273.15
-    R = 8.314  # J/mol·K
-    
-    # Calculate shift factors for each model
-    log_aT_arrhenius = []
-    log_aT_wlf = []
-    
-    for T in T_range:
-        T_K = T + 273.15
+        st.pyplot(fig)
+        plt.close()
         
-        # Arrhenius model
-        log_aT_arr = (Ea_comp * 1000 / R) * (1/T_K - 1/T_ref_K) / 2.303
-        log_aT_arrhenius.append(log_aT_arr)
-        
-        # WLF model
-        log_aT_w = (-C1_comp * (T - T_ref_comp)) / (C2_comp + (T - T_ref_comp))
-        log_aT_wlf.append(log_aT_w)
-    
-    # Create comparison plot
-    fig, ax = plt.subplots(figsize=(8, 5))
-    
-    # Plot both models
-    ax.plot(T_range, log_aT_arrhenius, 'r-', linewidth=2.5, 
-            label=tts.get("model_arrhenius", "Arrhenius"))
-    ax.plot(T_range, log_aT_wlf, 'b-', linewidth=2.5, 
-            label=tts.get("model_wlf", "WLF"))
-    
-    # Mark reference temperature
-    ax.axvline(T_ref_comp, color='gray', linestyle='--', alpha=0.5, 
-               label=tts.get("model_comparison_ref_line", "T_ref = {tref}°C").format(tref=T_ref_comp))
-    ax.axhline(0, color='gray', linestyle='--', alpha=0.3)
-    
-    # Labels and styling
-    ax.set_xlabel(tts.get("model_comparison_x_label", "Temperatuur (°C)"), 
-                  fontsize=12, fontweight='bold')
-    ax.set_ylabel(tts.get("model_comparison_y_label", "log(aT)"), 
-                  fontsize=12, fontweight='bold')
-    ax.set_title(tts.get("model_comparison_plot_title", "Model Vergelijking: Arrhenius vs WLF"), 
-                 fontsize=14, fontweight='bold')
-    ax.legend(loc='best')
-    ax.grid(True, alpha=0.3)
-    
-    # Add annotation
-    annotation_text = tts.get("model_comparison_annotation", 
-                               "Bij T_ref = {tref}°C: log(aT) = 0").format(tref=T_ref_comp)
-    ax.text(0.02, 0.98, annotation_text,
-            transform=ax.transAxes, fontsize=9,
-            verticalalignment='top',
-            bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.3))
-    
-    st.pyplot(fig)
-    plt.close()
-    
-    # Explanation below plot
-    st.caption(tts.get("model_comparison_interpretation", """**Interpretatie:**
-- **Arrhenius** (rood): Lineair verband, simpel model
-- **WLF** (blauw): Gebogen verloop, beter voor polymeren nabij Tg
-- Bij T_ref kruisen beide modellen (log(aT) = 0)
-- Verschil tussen modellen groter bij lage/hoge T"""))
+        # Explanation below plot
+        st.caption(tts.get("model_comparison_interpretation", """**Interpretatie:**
+    - **Arrhenius** (rood): Lineair verband, simpel model
+    - **WLF** (blauw): Gebogen verloop, beter voor polymeren nabij Tg
+    - Bij T_ref kruisen beide modellen (log(aT) = 0)
+    - Verschil tussen modellen groter bij lage/hoge T"""))
 
 # ============================================================================
 # TAB 2: THERMAL MODELS
