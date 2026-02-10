@@ -468,7 +468,7 @@
       }
     },
     "main_app": {
-      "title": "RheoApp - TPU Rheologie Expert Tool",
+      "title": "RheoApp - Rheology Analysis Tool",
       "caption": "💡 *Rheologie is 50% meten en 50% gezond verstand.*",
       "disclaimer_title": "⚠️ BELANGRIJKE DISCLAIMER",
       "disclaimer_text": "\n**Dit is een experimentele tool ontwikkeld via AI-assisted coding (Claude.ai & Gemini).**\n\n- ❌ **GEEN garantie** op correctheid van berekeningen\n- ❌ **GEEN formele validatie** tegen industriestandaarden  \n- ❌ **NIET bedoeld** voor kritische beslissingen zonder verificatie\n\n**Gebruik op eigen risico.** Valideer altijd met handberekeningen en gevalideerde software.\n\nZie **README.md** voor volledige disclaimer en beperkingen.\n",
@@ -1046,7 +1046,7 @@
       }
     },
     "main_app": {
-      "title": "RheoApp - TPU Rheology Expert Tool",
+      "title": "RheoApp - Rheology Analysis Tool",
       "caption": "💡 *Rheology is 50% measurement and 50% common sense.*",
       "disclaimer_title": "⚠️ IMPORTANT DISCLAIMER",
       "disclaimer_text": "\n**This is an experimental tool developed via AI-assisted coding (Claude.ai & Gemini).**\n\n- ❌ **NO guarantee** on calculation correctness\n- ❌ **NO formal validation** against industry standards  \n- ❌ **NOT intended** for critical decisions without verification\n\n**Use at your own risk.** Always validate with hand calculations and validated software.\n\nSee **README.md** for complete disclaimer and limitations.\n",

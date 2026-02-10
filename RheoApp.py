@@ -239,7 +239,7 @@ if uploaded_file:
         cmap = mpl.colormaps[cmap_opt]
         colors = [cmap(i) for i in np.linspace(0, 1, len(selected_temps))]
 
-        st.sidebar.divider()
+        st.markdown("---")
         st.sidebar.markdown(f"**{texts.get('wlf_section', '⚙️ WLF Parameters')}**")
 
         tg_hint = st.sidebar.number_input(
@@ -933,5 +933,5 @@ with col2:
         if st.session_state.lang != 'EN':
             st.session_state.lang = 'EN'
             st.rerun()
-st.sidebar.divider()
+st.markdown("---")
 st.sidebar.caption("RheoApp - v1.0")

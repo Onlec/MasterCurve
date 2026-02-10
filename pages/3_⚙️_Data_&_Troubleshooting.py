@@ -192,5 +192,5 @@ with col2:
         if st.session_state.lang != 'EN':
             st.session_state.lang = 'EN'
             st.rerun()
-st.sidebar.divider()
+st.markdown("---")
 st.sidebar.caption("RheoApp - v1.0")
