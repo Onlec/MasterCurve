@@ -8,20 +8,6 @@ from scipy.interpolate import interp1d, UnivariateSpline
 from io import BytesIO
 from translations import get_translations
 
-
-# --- CONFIGURATIE & STYLING ---
-st.set_page_config(page_title="RheoApp - TPU Rheology Expert Tool", layout="wide")
-# --- 1. TAAL INITIALISATIE (MOET BOVENAAN) ---
-if 'lang' not in st.session_state:
-    st.session_state.lang = 'EN'  # Default to English
-
-# Haal de vertalingen op
-all_translations = get_translations()
-
-# De 'texts' variabele veilig vullen met een fallback
-texts = all_translations.get(st.session_state.lang, all_translations["EN"])
-
-
 st.title(texts["title"])
 st.caption(texts["caption"])
 
