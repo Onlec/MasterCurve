@@ -1,4 +1,4 @@
-﻿# RAT - Rheology Analysis Tool
+﻿# The R.A.T. App - Rheology Analysis Tool
 
 > *"Rheologie is 50% meten en 50% gezond verstand."*
 

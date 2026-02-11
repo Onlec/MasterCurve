@@ -194,4 +194,4 @@ with col2:
             st.session_state.lang = 'EN'
             st.rerun()
 st.sidebar.markdown("---")
-st.sidebar.caption("RAT - Rheology Analysis Tool - v1.0")
+st.sidebar.caption("The R.A.T. App - Rheology Analysis Tool - v1.0")
