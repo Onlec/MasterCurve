@@ -28,11 +28,6 @@ texts = all_translations.get(st.session_state.lang, all_translations["NL"]).get(
 
 
 # --- CONFIGURATIE & STYLING ---
-st.set_page_config(page_title=texts.get("title", "RheoApp"), layout="wide")
-try:
-    st.image("assets/logo.png", width=200)
-except:
-    pass  # Als logo niet gevonden wordt, gewoon doorgaan
 st.title(texts.get("title", "RheoApp - TPU Rheology Expert Tool"))
 st.caption(texts.get("caption", ""))
 
@@ -977,4 +972,13 @@ with col2:
             st.session_state.lang = 'EN'
             st.rerun()
 st.sidebar.markdown("---")
+st.set_page_config(page_title=texts.get("title", "RheoApp"), layout="wide")
+try:
+    st.sidebar.image("assets/logo.png", width=100)
+except:
+    pass  # Als logo niet gevonden wordt, gewoon doorgaanst.set_page_config(page_title=texts.get("title", "RheoApp"), layout="wide")
+try:
+    st.sidebar.image("assets/logo.png", width=100)
+except:
+    pass  # Als logo niet gevonden wordt, gewoon doorgaan
 st.sidebar.caption("The R.A.T. App - Rheology Analysis Tool - v1.0")
